@@ -36,6 +36,7 @@
 #include "asd.h"
 #include "asddat.h"
 #include "asdmenu.h"
+#include "outctl.h"
 #include "video.h"
 
 extern ASD_COMP ASDcore;
@@ -92,13 +93,14 @@ main(int argc, char **argv) {
     printf("Error initializing video system.\n");
     exit(-1);
   }
+  InitIO();
 
   /*MonoCursorOff();*/
 
-  vPage(0);
+  SelectIO(&PUB);
   vBlinkControl(BLOFF);
   vCursorControl(CUR_HIDDEN);
-  SelectIO(CONS);
+  SelectIO(&CONS);
 
   srand((int)(inp(0x40))); /*seed random # generator*/
 
@@ -109,9 +111,9 @@ main(int argc, char **argv) {
   setupcga(BOOT);
 
 #ifdef COPYRIGHT_PAUSE
-  while (!kbhit())
+  while (!akbhit())
     ;
-  getch();
+  agetch();
 #endif
 
   loadconfig("system.ini"); /*load default configuration*/
@@ -171,16 +173,16 @@ main(int argc, char **argv) {
   }
 
 #ifndef EXTENDED_GRAPHICS
-  vPage(0);
+  SelectIO(&PUB);
   vStatLine("ESTABLISHING ET COMMUNICATIONS", 3, COLOR(BLK, WHT), 1);
-  SelectIO(CONS);
+  SelectIO(&CONS);
 #else
   sxColorSelect(0, 0);
   sxFontSelect(0);
   sprintf(ts, "ET1:%d, ET2:%d", ET1, ET2);
   sxPrintText(CEN, FBOT | 2, ts);
   sxPrintText(CEN, FBOT | 1, "Establishing ET Communications");
-  SelectIO(CONS);
+  SelectIO(&CONS);
 #endif
 
   info("-Initialize Et's");
@@ -374,12 +376,12 @@ AfterReConfig: /*Re-entrance if a ctrl=r is done...*/
     LoadFakeGame("Fake.gme");
   }
 
-  /*while(getch() != 'r');*/
+  /*while(agetch() != 'r');*/
   Eta = 1;
 
   while (((Eta < 4) || (Etb < 4)) & (bye == FALSE)) {
-    if (kbhit()) {
-      character = getch();
+    if (akbhit()) {
+      character = agetch();
       if (character == 'f') {
         /*Fake Game Mode!*/
         Eta = 5;
@@ -404,6 +406,7 @@ AfterReConfig: /*Re-entrance if a ctrl=r is done...*/
         }
       } else if (character == 18) {
         setupmenu();
+        /*cons_ud_idle(1);*/
         sys_config(TRUE);
         ConfigEts(TRUE);
         goto AfterReConfig;
@@ -482,11 +485,11 @@ AfterReConfig: /*Re-entrance if a ctrl=r is done...*/
       if (curtime.minute != minute) {
         minute = curtime.minute;
 #ifndef EXTENDED_GRAPHICS
-        vPage(0);
-        vChangeAttr(COLOR(BLK, WHT));
-        vPosCur(4, 22);
+        SelectIO(&PUB);
+        sChangeAttr(COLOR(BLK, WHT));
+        sPositionCur(4, 22);
         sprintf(ts, "%2d:%02d", (int)curtime.hour, (int)curtime.minute);
-        v_sends(ts);
+        asends(ts);
 #else
 #endif
         if (two_count) {
@@ -496,7 +499,7 @@ AfterReConfig: /*Re-entrance if a ctrl=r is done...*/
           two_count = 1;
         }
       }
-      SelectIO(CONS);
+      SelectIO(&CONS);
     }
   }
   if (bye == TRUE)
@@ -628,8 +631,8 @@ byte game_dokeyboard(void) {
   char gotch;
   static int pl;
   static byte view = 0;
-  if (kbhit()) {
-    gotch = getch();
+  if (akbhit()) {
+    gotch = agetch();
     pl = 10;
 #ifdef SECURE_CONSOLE
     if (gotch == password[0])
@@ -708,7 +711,7 @@ void rungame(void) {
   /*reset counter*/
   PollNum = 0;
 
-  vPage(0);
+  SelectIO(&PUB);
 
   /*clear out poll array*/
   for (l = 0; l < 65; ++l) npoll[l] = 0;
@@ -747,12 +750,12 @@ void rungame(void) {
     if (poll_flag == TRUE) {
       poll_flag = FALSE;
       /*print COUNTDOWN on status line*/
-      vPage(0);
-      vChangeAttr(COLOR(CRED, BLK));
+      SelectIO(&PUB);
+      sChangeAttr(COLOR(CRED, BLK));
       Dig_Digit((int)(timeremain / 10), 15, 4);
       Dig_Digit((int)(timeremain % 10), 23, 4);
 
-      SelectIO(CONS);
+      SelectIO(&CONS);
 
       /*send data to the PC*/
       if ((timeremain <= 25) && (pcs == FALSE) && (curconfig.pc == TRUE)) {
@@ -799,16 +802,17 @@ void rungame(void) {
   } else {
     setupcga(GAME2); /*dual field game*/
     stl = 12;        /*set status line*/
-    vPage(0);
-    vPosCur(10, 12);
-    vChangeAttr(COLOR(HWHT, BLU));
-    v_printf("%2d", game.number);
-    vPosCur(5, 13);
-    vChangeAttr(COLOR(HWHT, BLK));
-    v_printf("%10s", game.redtm2);
-    vPosCur(25, 13);
-    v_printf("%10s", game.grntm2);
-    SelectIO(CONS);
+    SelectIO(&PUB);
+    sPositionCur(10, 12);
+    sChangeAttr(COLOR(HWHT, BLU));
+    aprintf("%2d", game.number);
+    sPositionCur(5, 13);
+    sChangeAttr(COLOR(HWHT, BLK));
+    aprintf("%10s", game.redtm2);
+    sPositionCur(25, 13);
+
+    aprintf("%10s", game.grntm2);
+    SelectIO(&CONS);
   }
 
   UpdateSync(7, 21, sync);
@@ -825,9 +829,9 @@ void rungame(void) {
       if (timeremain <= 0) {
         sync = ESYNC;
         UpdateSync(7, 21, sync);
-        vPage(0);
+        SelectIO(&PUB);
         vStatLine("<< TERMINATED >>", 24, COLOR(HWHT, HBLU), 1);
-        SelectIO(CONS);
+        SelectIO(&CONS);
       }
 
       /* download data to the PC*/
@@ -867,30 +871,30 @@ void rungame(void) {
       sprintf(tempst, "%2d:%02d", (int)(timeremain / 60),
               (int)(timeremain % 60));
       if (timeremain > 0) {
-        vPage(0);
+        SelectIO(&PUB);
         vStatLine(tempst, 34, COLOR(HWHT, BLU), 0);
-        SelectIO(CONS);
+        SelectIO(&CONS);
       }
-      PrintMono(6, 21, tempst);
+      sPositionCur(21, 6);
+      aprintf("%2d:%02d", (int)(timeremain / 60), (int)(timeremain % 60));
 
       /*update the scores on the on the lobby screen*/
       doscores();
-
+      SelectIO(&CONS);
       /*update the test slot score on the tech-screen*/
-      sprintf(tempst, "%5d", player[41].score);
-      PrintMono(5, 41, tempst);
-      sprintf(tempst, "%5d", player[42].score);
-      PrintMono(6, 41, tempst);
+      sPositionCur(41, 5);
+      aprintf("%5d", player[41].score);
+      sPositionCur(41, 6);
+      aprintf("%5d", player[42].score);
       send = slot;
-      sprintf(tempst, "%2d-%02d-%02d      %2d:%02d:%02d", curdate.month,
-              curdate.day, curdate.year, curtime.hour, curtime.minute,
-              curtime.second);
-      PrintMono(3, 25, tempst);
-      vPage(0);
-      vChangeAttr(COLOR(HWHT, BLU));
-      SelectIO(CONS);
-      sprintf(tempst, "BS:%3d ES:%3d RB:%d", sbegin, send, badradio);
-      PrintMono(10, 1, tempst);
+      sPositionCur(25, 3);
+      aprintf("%2d-%02d-%02d      %2d:%02d:%02d", curdate.month, curdate.day,
+              curdate.year, curtime.hour, curtime.minute, curtime.second);
+      SelectIO(&PUB);
+      sChangeAttr(COLOR(HWHT, BLU));
+      SelectIO(&CONS);
+      sPositionCur(1, 10);
+      aprintf("BS:%3d ES:%3d RB:%d", sbegin, send, badradio);
       UpdateView(view);
     }
   }
@@ -909,9 +913,9 @@ void rungame(void) {
 
   UpdateSync(7, 21, sync);
 
-  vPage(0);
+  SelectIO(&PUB);
   vStatLine("<< TERMINATED >>", 24, COLOR(HWHT, HBLU), 1);
-  SelectIO(CONS);
+  SelectIO(&CONS);
 
   /*final score update*/
   doscores();
@@ -949,7 +953,7 @@ void rungame(void) {
 
   ++game.number;
   CheckForHighScores(); /*increment game #*/
-  SelectIO(CONS);
+  SelectIO(&CONS);
 }
 
 /**************************************************************************
@@ -1149,7 +1153,7 @@ void processpoll_f(void) {
       }
       /* HIT OPPONENT */
       else if (player[slotir[value]].used == TRUE) {
-        /*vPage(0);*/
+        /*SelectIO(&PUB);*/
         if (0 < slotir[value] < 41) {
           if ((!(((((0 < slotir[value]) &&
                     (slotir[value] <= 20)) && /* IF (NOT (ON SAME TEAM AND NOT
@@ -1314,15 +1318,15 @@ void SendToDC(void) {
     info("-SENDING DATA TO DC");
     sprintf(ts, "   %2d:%02d %2d-%02d-%02d", curtime.hour, curtime.minute,
             curdate.month, curdate.day, curdate.year % 100);
-    vPage(0);
+    SelectIO(&PUB);
     vStatLine(ts, 23, COLOR(HWHT, BLU), 1);
     omar = vPageMem(0);
     for (m = 0; m < 2000; ++m) buffer[m] = *(omar++);
 
-    vPage(0);
+    SelectIO(&PUB);
     vStatLine(" TRANSMITTING RESULTS TO PLANET EARTH  ", 0, COLOR(HWHT, BLU),
               1);
-    SelectIO(CONS);
+    SelectIO(&CONS);
     for (m = 0; m < 2000;
          ++m) /*Send it...wait for a response after each character!*/
     {
@@ -1646,26 +1650,26 @@ void ControlBootScreen() {
 
   ts = (char *)malloc(100);
 
-  SelectIO(CONS);
-  vPosCur(0, 0);
-  vChangeAttr(hrcNORM);
-  vBox(0xffff, '°', 80, 25);
-  vChangeAttr(hrcINTEN | hrcREV);
-  vBox(0xffff, ' ', 80, 5);
-  vBorder(80, 6, 2);
-  vPosCur(2, 2);
+  SelectIO(&CONS);
+  sPositionCur(0, 0);
+  sChangeAttr(hrcNORM);
+  fBox(0xffff, '°', 80, 25);
+  sChangeAttr(hrcINTEN | hrcREV);
+  fBox(0xffff, ' ', 80, 5);
+  sBorder(80, 6, 2);
+  sPositionCur(2, 2);
   sprintf(ts, "PHOTON Gamma System, Revision %s  Date:%s", SYSTEMVERSION,
           SYSTEMDATE);
-  v_sends(ts);
-  vPosCur(2, 3);
+  asends(ts);
+  sPositionCur(2, 3);
   sprintf(ts, "(c) 1991,1992 Robert Banz, All Rights Reserved");
-  v_sends(ts);
-  vPosCur(2, 4);
+  asends(ts);
+  sPositionCur(2, 4);
   sprintf(ts,
           "Video routines (And even more shit ) (c) 1991,1992 Chris Fanning");
-  vPosCur(0, 24);
-  vChangeAttr(hrcNORM);
-  v_sends("Press any key to continue...");
+  sPositionCur(0, 24);
+  sChangeAttr(hrcNORM);
+  asends("Press any key to continue...");
   free(ts);
 }
 
@@ -1712,9 +1716,9 @@ void MainLoop() {
       ctrl_e = FALSE;
       rungame();        /*run the game*/
       SetupMonoIdle(0); /*setup monitor for idle*/
-      vPage(0);
+      SelectIO(&PUB);
       vStatLine("        SUMMARY", 23, COLOR(HWHT, BLU), 1);
-      SelectIO(CONS);
+      SelectIO(&CONS);
       if ((badradio < 30) && (ctrl_e == FALSE))
         WritePodPerform(); /*write pod performance*/
       else

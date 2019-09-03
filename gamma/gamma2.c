@@ -11,8 +11,8 @@
 #include "asd.h"
 #include "asddat.h"
 #include "gamma.h"
+#include "outctl.h"
 #include "video.h"
-
 #ifdef EXTENDED_GRAPHICS
 #include <graph.h>
 #include "fontop.h"
@@ -200,38 +200,38 @@ void setupslots() {
 #ifndef EXTENDED_GRAPHICS
 void LOBBY_boot(void) {
   char ts[80];
-  vPage(0);
-  vPosCur(0, 0);
-  vChangeAttr(COLOR(BLK, WHT));
+  SelectIO(&PUB);
+  sPositionCur(0, 0);
+  sChangeAttr(COLOR(BLK, WHT));
   vStatLine("", 0, COLOR(BLK, WHT), 1);
-  vBox(0xffff, ' ', 40, 24);
+  fBox(0xffff, ' ', 40, 24);
 
-  vChangeAttr(COLOR(HWHT, BLU));
-  vBox(0xffff, ' ', 40, 4);
+  sChangeAttr(COLOR(HWHT, BLU));
+  fBox(0xffff, ' ', 40, 4);
 
-  vPosCur(1, 0);
-  v_sends("Stimpy, sometimes your wealth of");
-  vPosCur(1, 1);
-  v_sends("ignorance astounds me...this MUST");
-  vPosCur(1, 2);
+  sPositionCur(1, 0);
+  asends("Stimpy, sometimes your wealth of");
+  sPositionCur(1, 1);
+  asends("ignorance astounds me...this MUST");
+  sPositionCur(1, 2);
   sprintf(ts, "be the Gamma Systems Computer V%s", SYSTEMVERSION);
-  v_sends(ts);
-  vChangeAttr(COLOR(BLK, WHT));
-  vPosCur(1, 6);
-  v_sends("Photon Systems Software");
-  vPosCur(1, 8);
-  v_sends("(c) 1991,92,93 Robert Banz and");
-  vPosCur(10, 9);
-  v_sends("Chris Fanning.");
-  vPosCur(10, 10);
-  v_sends("All Rights Reserved");
-  vPosCur(1, 12);
-  v_sends("Licensed to Quantum Entertainment Inc.");
-  vPosCur(1, 14);
-  v_sends(__DATE__);
-  vPosCur(1, 16);
-  v_sends("The system is coming up, please wait.");
-  SelectIO(CONS);
+  asends(ts);
+  sChangeAttr(COLOR(BLK, WHT));
+  sPositionCur(1, 6);
+  asends("Photon Systems Software");
+  sPositionCur(1, 8);
+  asends("(c) 1991,92,93 Robert Banz and");
+  sPositionCur(10, 9);
+  asends("Chris Fanning.");
+  sPositionCur(10, 10);
+  asends("All Rights Reserved");
+  sPositionCur(1, 12);
+  asends("Licensed to Quantum Entertainment Inc.");
+  sPositionCur(1, 14);
+  asends(__DATE__);
+  sPositionCur(1, 16);
+  asends("The system is coming up, please wait.");
+  SelectIO(&CONS);
 }
 #else
 
@@ -289,20 +289,20 @@ void PrintMessage(int dummy) {
     getc(fp);
     getc(fp);
     getc(fp);
-    vChangeAttr(COLOR(BLK, WHT));
-    vPosCur(0, 3);
-    vBox(0xffff, ' ', 40, 10);
+    sChangeAttr(COLOR(BLK, WHT));
+    sPositionCur(0, 3);
+    fBox(0xffff, ' ', 40, 10);
     for (y = 0; y < 10; ++y) {
       fgets(textinfo[y], 40, fp);
       nl_to_null(textinfo[y]);
       fgetc(fp);
-      vPosCur(0, (byte)(y + 3));
-      v_sends(textinfo[y]);
+      sPositionCur(0, (byte)(y + 3));
+      asends(textinfo[y]);
     }
   }
   fclose(fp);
   if (tnum == 10) tnum = 0;
-  SelectIO(CONS);
+  SelectIO(&CONS);
 #else
 #endif
 }
@@ -315,70 +315,70 @@ void LOBBY_tween() {
   char *SSS;
 
 #ifndef EXTENDED_GRAPHICS
-  vPage(0);
+  SelectIO(&PUB);
 #ifdef EXTENDED_GRAPHICS
   sxToText();
 #endif
-  vChangeAttr(COLOR(BLK, WHT));
-  vPosCur(0, 0);
-  vBox(0xffff, ' ', 40, 24);
-  vChangeAttr(COLOR(HWHT, BLU));
-  vBox(0xffff, ' ', strlen(TitleString) + 2, 2);
-  v_sends(TitleString);
-  vChangeAttr(COLOR(BLK, WHT));
-  vPosCur(0, 2);
+  sChangeAttr(COLOR(BLK, WHT));
+  sPositionCur(0, 0);
+  fBox(0xffff, ' ', 40, 24);
+  sChangeAttr(COLOR(HWHT, BLU));
+  fBox(0xffff, ' ', strlen(TitleString) + 2, 2);
+  asends(TitleString);
+  sChangeAttr(COLOR(BLK, WHT));
+  sPositionCur(0, 2);
   vRepeat('Í', strlen(TitleString) + 2);
   for (i = 0; i < 2; ++i) {
-    vPosCur(strlen(TitleString) + 2, i);
+    sPositionCur(strlen(TitleString) + 2, i);
     vPutch('³');
   }
-  vPosCur(strlen(TitleString) + 2, 2);
+  sPositionCur(strlen(TitleString) + 2, 2);
   vPutch('¾');
-  vPosCur(0, 13);
-  vBorder(40, 8, 2);
-  vPosCur(1, 13);
-  vChangeAttr(COLOR(WHT, BLU));
+  sPositionCur(0, 13);
+  sBorder(40, 8, 2);
+  sPositionCur(1, 13);
+  sChangeAttr(COLOR(WHT, BLU));
   vRepeat('ß', 38);
-  vPosCur(1, 20);
+  sPositionCur(1, 20);
   vRepeat('Ü', 38);
-  vPosCur(1, 14);
-  vBox(0xffff, ' ', 38, 6);
-  vChangeAttr(COLOR(BLK, WHT));
-  vPosCur(1, 21);
-  v_sends("Photon Time");
-  vPosCur(26, 21);
-  v_sends("Next Manuever");
-  vPosCur(30, 22);
-  v_printf("%04d", game.number);
-  vChangeAttr(COLOR(BLK, WHT));
-  vPosCur(4, 22);
+  sPositionCur(1, 14);
+  fBox(0xffff, ' ', 38, 6);
+  sChangeAttr(COLOR(BLK, WHT));
+  sPositionCur(1, 21);
+  asends("Photon Time");
+  sPositionCur(26, 21);
+  asends("Next Manuever");
+  sPositionCur(30, 22);
+  aprintf("%04d", game.number);
+  sChangeAttr(COLOR(BLK, WHT));
+  sPositionCur(4, 22);
   sprintf(ts, "%2d:%02d", (int)curtime.hour, (int)curtime.minute);
-  v_sends(ts);
+  asends(ts);
   PrintMessage(++tnum);
-  vPage(0);
+  SelectIO(&PUB);
   /*print the high scores in the high score zone*/
-  vChangeAttr(COLOR(HBRN, BLU));
-  vPosCur(2, 14);
-  v_sends("High score of the week:");
-  vPosCur(2, 17);
-  v_sends("Highest hits of the week:");
-  vChangeAttr(COLOR(HWHT, BLU));
-  vPosCur(7, 15);
+  sChangeAttr(COLOR(HBRN, BLU));
+  sPositionCur(2, 14);
+  asends("High score of the week:");
+  sPositionCur(2, 17);
+  asends("Highest hits of the week:");
+  sChangeAttr(COLOR(HWHT, BLU));
+  sPositionCur(7, 15);
   if (weekly.highscore.passport[0]) {
-    v_sendsn(weekly.highscore.name, 10);
-    vPosCur(23, 15);
+    asendc(weekly.highscore.name, 10);
+    sPositionCur(23, 15);
     sprintf(ts, "%6d", weekly.highscore.score);
-    v_sends(ts);
+    asends(ts);
   } else
-    v_sends("None yet!  It could be YOU!");
-  vPosCur(7, 18);
+    asends("None yet!  It could be YOU!");
+  sPositionCur(7, 18);
   if (weekly.highhits.passport[0]) {
-    v_sendsn(weekly.highscore.name, 10);
-    vPosCur(23, 18);
-    v_printf("%3d", weekly.highhits.hits);
+    asendc(weekly.highscore.name, 10);
+    sPositionCur(23, 18);
+    aprintf("%3d", weekly.highhits.hits);
   } else
-    v_sends("None yet!  It could be YOU!");
-  SelectIO(CONS);
+    asends("None yet!  It could be YOU!");
+  SelectIO(&CONS);
 #else
 
   sxClear();
@@ -400,69 +400,69 @@ void LOBBY_instokn() {
   sxToText();
 #endif
 
-  vPage(0);
-  vChangeAttr(COLOR(BLK, WHT));
-  vPosCur(0, 0);
-  vBox(0xffff, ' ', 40, 24);
-  vChangeAttr(COLOR(HWHT, BLU));
-  vBox(0xffff, ' ', strlen(TitleString) + 2, 2);
-  v_sends(TitleString);
-  vChangeAttr(COLOR(BLK, WHT));
-  vPosCur(0, 2);
+  SelectIO(&PUB);
+  sChangeAttr(COLOR(BLK, WHT));
+  sPositionCur(0, 0);
+  fBox(0xffff, ' ', 40, 24);
+  sChangeAttr(COLOR(HWHT, BLU));
+  fBox(0xffff, ' ', strlen(TitleString) + 2, 2);
+  asends(TitleString);
+  sChangeAttr(COLOR(BLK, WHT));
+  sPositionCur(0, 2);
   vRepeat('Í', strlen(TitleString) + 2);
   for (i = 0; i < 2; ++i) {
-    vPosCur(strlen(TitleString) + 2, i);
+    sPositionCur(strlen(TitleString) + 2, i);
     vPutch('³');
   }
-  vPosCur(strlen(TitleString) + 2, 2);
+  sPositionCur(strlen(TitleString) + 2, 2);
   vPutch('¾');
-  vPosCur(0, 13);
-  vBorder(40, 8, 2);
-  vPosCur(1, 13);
-  vChangeAttr(COLOR(WHT, BLU));
+  sPositionCur(0, 13);
+  sBorder(40, 8, 2);
+  sPositionCur(1, 13);
+  sChangeAttr(COLOR(WHT, BLU));
   vRepeat('ß', 38);
-  vPosCur(1, 20);
+  sPositionCur(1, 20);
   vRepeat('Ü', 38);
-  vPosCur(1, 14);
-  vBox(0xffff, ' ', 38, 6);
-  vChangeAttr(COLOR(BLK, WHT));
-  vPosCur(1, 21);
-  v_sends("Photon Time");
-  vPosCur(26, 21);
-  v_sends("Next Manuever");
-  vPosCur(30, 22);
-  v_printf("%04d", game.number);
-  vChangeAttr(COLOR(BLK, WHT));
-  vPosCur(4, 22);
+  sPositionCur(1, 14);
+  fBox(0xffff, ' ', 38, 6);
+  sChangeAttr(COLOR(BLK, WHT));
+  sPositionCur(1, 21);
+  asends("Photon Time");
+  sPositionCur(26, 21);
+  asends("Next Manuever");
+  sPositionCur(30, 22);
+  aprintf("%04d", game.number);
+  sChangeAttr(COLOR(BLK, WHT));
+  sPositionCur(4, 22);
   sprintf(ts, "%2d:%02d", (int)curtime.hour, (int)curtime.minute);
-  v_sends(ts);
+  asends(ts);
   PrintMessage(((tnum == 0) ? tnum++ : tnum));
-  vPage(0);
-  vPosCur(2, 14);
-  vChangeAttr(COLOR(BLK, WHT));
-  vBox(0xffff, ' ', 36, 6);
-  vChangeAttr(COLOR(CRED, HWHT));
-  vPosCur(3, 14);
-  v_sends("*ATTENTION:*");
-  vChangeAttr(COLOR(BLK, WHT));
-  vPosCur(16, 14);
-  v_sends("Maneuver in final");
-  vPosCur(4, 15);
-  v_sends("phase of staging.");
-  vPosCur(4, 18);
-  v_sends("Next maneuver please report to");
-  vPosCur(4, 19);
-  v_sends("staging area now !");
+  SelectIO(&PUB);
+  sPositionCur(2, 14);
+  sChangeAttr(COLOR(BLK, WHT));
+  fBox(0xffff, ' ', 36, 6);
+  sChangeAttr(COLOR(CRED, HWHT));
+  sPositionCur(3, 14);
+  asends("*ATTENTION:*");
+  sChangeAttr(COLOR(BLK, WHT));
+  sPositionCur(16, 14);
+  asends("Maneuver in final");
+  sPositionCur(4, 15);
+  asends("phase of staging.");
+  sPositionCur(4, 18);
+  asends("Next maneuver please report to");
+  sPositionCur(4, 19);
+  asends("staging area now !");
 
   /*DispGameModes();*/
-  SelectIO(CONS);
+  SelectIO(&CONS);
 }
 
 void LOBBY_noxfer() {
-  vPage(0);
-  vChangeAttr(COLOR(HWHT, BLU));
+  SelectIO(&PUB);
+  sChangeAttr(COLOR(HWHT, BLU));
   vStatLine("", 0, COLOR(HWHT, BLU), 1);
-  SelectIO(CONS);
+  SelectIO(&CONS);
 }
 void Dig_Digit(int digit, byte x, byte y) {
   int i;
@@ -473,14 +473,14 @@ void Dig_Digit(int digit, byte x, byte y) {
                              {1, 1, 1, 1, 1, 1, 1}, {1, 1, 1, 1, 0, 1, 1}};
   static char s[7][4] = {{1, 0, 4, 1}, {5, 1, 1, 2}, {5, 4, 1, 2}, {1, 6, 4, 1},
                          {0, 4, 1, 2}, {0, 1, 1, 2}, {1, 3, 4, 1}};
-  vPosCur(x, y);
-  vBox(0xffff, ' ', 6, 7);
+  sPositionCur(x, y);
+  fBox(0xffff, ' ', 6, 7);
 
   if ((digit >= 0) && (digit < 10)) {
     for (i = 0; i < 7; ++i) {
       if (data[digit][i]) {
-        vPosCur(x + s[i][0], y + s[i][1]);
-        vBox(0xffff, 219, s[i][2], s[i][3]);
+        sPositionCur(x + s[i][0], y + s[i][1]);
+        fBox(0xffff, 219, s[i][2], s[i][3]);
       }
     }
   }
@@ -497,57 +497,57 @@ void LOBBY_alert() {
   sxToText();
 #endif
 
-  vPage(0);
-  vChangeAttr(COLOR(HWHT, BLK));
-  vPosCur(0, 0);
-  vBox(0xffff, ' ', 40, 24);
-  vChangeAttr(COLOR(HWHT, BLU));
-  vBox(0xffff, ' ', strlen(TitleString) + 2, 2);
-  v_sends(TitleString);
-  vChangeAttr(COLOR(HWHT, BLK));
-  vPosCur(0, 2);
+  SelectIO(&PUB);
+  sChangeAttr(COLOR(HWHT, BLK));
+  sPositionCur(0, 0);
+  fBox(0xffff, ' ', 40, 24);
+  sChangeAttr(COLOR(HWHT, BLU));
+  fBox(0xffff, ' ', strlen(TitleString) + 2, 2);
+  asends(TitleString);
+  sChangeAttr(COLOR(HWHT, BLK));
+  sPositionCur(0, 2);
   vRepeat('Í', strlen(TitleString) + 2);
   for (i = 0; i < 2; ++i) {
-    vPosCur(strlen(TitleString) + 2, i);
+    sPositionCur(strlen(TitleString) + 2, i);
     vPutch('³');
   }
-  vPosCur(strlen(TitleString) + 2, 2);
+  sPositionCur(strlen(TitleString) + 2, 2);
   vPutch('¾');
-  vChangeAttr(COLOR(BLU, BLK));
-  vPosCur(7, 6);
+  sChangeAttr(COLOR(BLU, BLK));
+  sPositionCur(7, 6);
   vPutch('ß');
-  vPosCur(8, 6);
+  sPositionCur(8, 6);
   vPutch('Û');
-  vPosCur(9, 6);
+  sPositionCur(9, 6);
   vPutch('ß');
-  vPosCur(8, 7);
+  sPositionCur(8, 7);
   vPutch('Û');
-  vPosCur(8, 8);
+  sPositionCur(8, 8);
   vPutch('ß');
-  vPosCur(11, 7);
-  v_sends("ßß");
-  vChangeAttr(COLOR(HWHT, BLK));
-  vPosCur(0, 13);
-  vBorder(40, 8, 2);
-  vPosCur(1, 13);
-  vChangeAttr(COLOR(BLK, BLU));
+  sPositionCur(11, 7);
+  asends("ßß");
+  sChangeAttr(COLOR(HWHT, BLK));
+  sPositionCur(0, 13);
+  sBorder(40, 8, 2);
+  sPositionCur(1, 13);
+  sChangeAttr(COLOR(BLK, BLU));
   vRepeat('ß', 38);
-  vPosCur(1, 20);
+  sPositionCur(1, 20);
   vRepeat('Ü', 38);
-  vPosCur(1, 14);
-  vBox(0xffff, ' ', 38, 6);
-  vChangeAttr(COLOR(CRED, HWHT));
-  vPosCur(2, 14);
-  vBox(0xffff, ' ', 36, 6);
+  sPositionCur(1, 14);
+  fBox(0xffff, ' ', 38, 6);
+  sChangeAttr(COLOR(CRED, HWHT));
+  sPositionCur(2, 14);
+  fBox(0xffff, ' ', 36, 6);
   for (i = 0; i < 4; ++i) {
-    vPosCur(2, i + 15);
-    v_sends(alert[i]);
+    sPositionCur(2, i + 15);
+    asends(alert[i]);
   }
-  vPosCur(5, 22);
-  vChangeAttr(COLOR(HWHT, BLK));
-  v_printf("Manuever #%d is beginning NOW !", game.number);
+  sPositionCur(5, 22);
+  sChangeAttr(COLOR(HWHT, BLK));
+  aprintf("Manuever #%d is beginning NOW !", game.number);
   vStatLine("", 0, COLOR(BLK, BLK), 1);
-  SelectIO(CONS);
+  SelectIO(&CONS);
 }
 
 char *GameType(byte type) {
@@ -574,24 +574,24 @@ void LOBBY_game1_naughty() {
   sxToText();
 #endif
 
-  vPage(0);
-  vChangeAttr(COLOR(WHT, BLK));
-  vPosCur(0, 0);
-  vBox(0xffff, ' ', 40, 25);
+  SelectIO(&PUB);
+  sChangeAttr(COLOR(WHT, BLK));
+  sPositionCur(0, 0);
+  fBox(0xffff, ' ', 40, 25);
 
-  vPosCur(0, 0);
-  vChangeAttr(COLOR(HBRN, BLU));
-  v_sends(" Score Player ID        Hits OwnP Shot B");
-  vPosCur(0, 1);
-  vChangeAttr(COLOR(HWHT, CRED));
-  vBox(0xffff, ' ', 40, 1);
-  vPosCur(7, 1);
-  v_sendsn(game.redtm1, 10);
-  vPosCur(0, 13);
-  vChangeAttr(COLOR(HWHT, GRN));
-  vBox(0xffff, ' ', 40, 1);
-  vPosCur(7, 13);
-  v_sendsn(game.grntm1, 10);
+  sPositionCur(0, 0);
+  sChangeAttr(COLOR(HBRN, BLU));
+  asends(" Score Player ID        Hits OwnP Shot B");
+  sPositionCur(0, 1);
+  sChangeAttr(COLOR(HWHT, CRED));
+  fBox(0xffff, ' ', 40, 1);
+  sPositionCur(7, 1);
+  asendc(game.redtm1, 10);
+  sPositionCur(0, 13);
+  sChangeAttr(COLOR(HWHT, GRN));
+  fBox(0xffff, ' ', 40, 1);
+  sPositionCur(7, 13);
+  asendc(game.grntm1, 10);
 
   vStatLine("Game:", 0, COLOR(WHT, BLU), 1);
   vStatLine("Remaining:", 24, COLOR(WHT, BLU), 0);
@@ -608,25 +608,25 @@ void LOBBY_game1_nice() {
   sxToText();
 #endif
 
-  vPage(0);
-  vChangeAttr(COLOR(WHT, BLK));
-  vPosCur(0, 0);
-  vBox(0xffff, ' ', 40, 25);
+  SelectIO(&PUB);
+  sChangeAttr(COLOR(WHT, BLK));
+  sPositionCur(0, 0);
+  fBox(0xffff, ' ', 40, 25);
 
-  vPosCur(0, 0);
-  vChangeAttr(COLOR(HBRN, BLU));
+  sPositionCur(0, 0);
+  sChangeAttr(COLOR(HBRN, BLU));
 
-  v_sends(" Score    Player ID         Hits   Base ");
-  vPosCur(0, 1);
-  vChangeAttr(COLOR(HWHT, CRED));
-  vBox(0xffff, ' ', 40, 1);
-  vPosCur(10, 1);
-  v_sendsn(game.redtm1, 10);
-  vPosCur(0, 13);
-  vChangeAttr(COLOR(HWHT, GRN));
-  vBox(0xffff, ' ', 40, 1);
-  vPosCur(10, 13);
-  v_sendsn(game.grntm1, 10);
+  asends(" Score    Player ID         Hits   Base ");
+  sPositionCur(0, 1);
+  sChangeAttr(COLOR(HWHT, CRED));
+  fBox(0xffff, ' ', 40, 1);
+  sPositionCur(10, 1);
+  asendc(game.redtm1, 10);
+  sPositionCur(0, 13);
+  sChangeAttr(COLOR(HWHT, GRN));
+  fBox(0xffff, ' ', 40, 1);
+  sPositionCur(10, 13);
+  asendc(game.grntm1, 10);
 
   vStatLine("Game:", 0, COLOR(WHT, BLU), 1);
   vStatLine("Remaining:", 24, COLOR(WHT, BLU), 0);
@@ -667,30 +667,30 @@ int LOBBY_game1_teamud(int color, int naughty) {
     if ((i == 1) &&
         (rankplayer[base + 1]->score > rankplayer[obase + 1]->score) &&
         players[othercolor][0])
-      vChangeAttr(COLOR(vcolor, HBLK));
+      sChangeAttr(COLOR(vcolor, HBLK));
     else
-      vChangeAttr(COLOR(vcolor, BLK));
+      sChangeAttr(COLOR(vcolor, BLK));
     if (naughty) {
-      vPosCur(7, vbase + i);
-      v_sendsn(rankplayer[base + i]->name, 10);
-      vPosCur(0, vbase + i);
+      sPositionCur(7, vbase + i);
+      asendc(rankplayer[base + i]->name, 10);
+      sPositionCur(0, vbase + i);
       sprintf(ts, "%6d", rankplayer[base + i]->score);
-      v_sends(ts);
-      vChangeAttr(COLOR(vcolor, BLK));
-      vPosCur(24, vbase + i);
-      v_printf("%4d %4d %4d %c", rankplayer[base + i]->hits,
-               rankplayer[base + i]->hitown, rankplayer[base + i]->gethit,
-               ((rankplayer[base + i]->baseflag) ? '*' : ' '));
+      asends(ts);
+      sChangeAttr(COLOR(vcolor, BLK));
+      sPositionCur(24, vbase + i);
+      aprintf("%4d %4d %4d %c", rankplayer[base + i]->hits,
+              rankplayer[base + i]->hitown, rankplayer[base + i]->gethit,
+              ((rankplayer[base + i]->baseflag) ? '*' : ' '));
     } else {
-      vPosCur(10, vbase + i);
-      v_sendsn(rankplayer[base + i]->name, 10);
-      vPosCur(0, vbase + i);
+      sPositionCur(10, vbase + i);
+      asendc(rankplayer[base + i]->name, 10);
+      sPositionCur(0, vbase + i);
       sprintf(ts, "%6d", rankplayer[base + i]->score);
-      v_sends(ts);
-      vChangeAttr(COLOR(vcolor, BLK));
-      vPosCur(28, vbase + i);
-      v_printf("%4d    %c", rankplayer[base + i]->hits,
-               ((rankplayer[base + i]->baseflag) ? '*' : ' '));
+      asends(ts);
+      sChangeAttr(COLOR(vcolor, BLK));
+      sPositionCur(28, vbase + i);
+      aprintf("%4d    %c", rankplayer[base + i]->hits,
+              ((rankplayer[base + i]->baseflag) ? '*' : ' '));
     }
 
     gethits += rankplayer[base + i]->gethit;
@@ -699,14 +699,14 @@ int LOBBY_game1_teamud(int color, int naughty) {
     bases += (rankplayer[base + i]->baseflag ? 1 : 0);
     teamscore += rankplayer[base + i]->score;
   }
-  vPosCur(24, vbase);
+  sPositionCur(24, vbase);
 
-  vChangeAttr(COLOR(HWHT, vcolor));
+  sChangeAttr(COLOR(HWHT, vcolor));
   if (naughty)
-    v_printf("%4d %4d %4d %c", hits, hitown, gethits,
-             ((bases == players[color][0]) ? '*' : ' '));
+    aprintf("%4d %4d %4d %c", hits, hitown, gethits,
+            ((bases == players[color][0]) ? '*' : ' '));
   else
-    v_printf("    %4d    %c", hits, ((bases == players[color][0]) ? '*' : ' '));
+    aprintf("    %4d    %c", hits, ((bases == players[color][0]) ? '*' : ' '));
 
   return teamscore;
 }
@@ -715,29 +715,29 @@ void LOBBY_game1_update(int naughty) {
   int tsr, tsg;
   char ts[10];
   int where;
-  vPage(0);
+  SelectIO(&PUB);
 
   /* the RAD team*/
   tsr = LOBBY_game1_teamud(RED, naughty);
   tsg = LOBBY_game1_teamud(GREEN, naughty);
 
   if (tsr > tsg)
-    vChangeAttr(COLOR(HWHT, HRED));
+    sChangeAttr(COLOR(HWHT, HRED));
   else
-    vChangeAttr(COLOR(HWHT, CRED));
-  vPosCur(0, 1);
+    sChangeAttr(COLOR(HWHT, CRED));
+  sPositionCur(0, 1);
   sprintf(ts, "%6d", tsr);
-  v_sends(ts);
+  asends(ts);
 
   if (tsg > tsr)
-    vChangeAttr(COLOR(HWHT, HGRN));
+    sChangeAttr(COLOR(HWHT, HGRN));
   else
-    vChangeAttr(COLOR(HWHT, GRN));
-  vPosCur(0, 13);
+    sChangeAttr(COLOR(HWHT, GRN));
+  sPositionCur(0, 13);
   sprintf(ts, "%6d", tsg);
-  v_sends(ts);
+  asends(ts);
 
-  SelectIO(CONS);
+  SelectIO(&CONS);
 }
 
 void LOBBY_game2() { /*PUT TWO FIELD SETUP HERE ! ! !*/ }
@@ -777,7 +777,7 @@ void nl_to_null(char *string) {
 }
 
 void clrcga(void) {
-  vPage(0);
+  SelectIO(&PUB);
   vClearScreen();
 }
 
@@ -884,9 +884,9 @@ void EtStatus(byte Et1Stat, byte Et2Stat)
     HOST_sendsn(PC, ts, 40);
   }
 #ifndef EXTENDED_GRAPHICS
-  vPage(0);
+  SelectIO(&PUB);
   vStatLine(ts, 0, COLOR(HWHT, BLU), 1);
-  SelectIO(CONS);
+  SelectIO(&CONS);
 #else
   if (SSS != oldSSS) {
     int i;

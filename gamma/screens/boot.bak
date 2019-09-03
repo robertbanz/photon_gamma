@@ -1,0 +1,21 @@
+void LOBBY_boot(void) {
+    char *m;
+    m = (char *) malloc(100);
+
+    sxToGraphics(_VRES16COLOR);
+    sxColorSelect(7,0);
+    ReadScreen("screens\\logo.asd");
+    sxColorSelect(3,0);
+    sxDrawLine(0,125,639,125);
+    sxFloodFill(1,176);
+    sxColorSelect(0,0);
+    sxFontSelect(1);
+    sxPrintText(1,INCR|1,"You knew it was coming, you just didn't know when!");
+    sxPrintText(1,INCR|1, "(c) 1991-93 Robert Banz & Chris Fanning, All Rights Reserved");
+    sxPrintText(1,INCR|2, "Special Thanks To: John Shappert & Chris Hutson.");
+    sprintf(m, "Date Compiled: %s, Version V%s.", __DATE__, VERSIONNUMBER);
+    sxPrintText(1,INCR|2,m);
+    sxPrintText(CEN,INCR|2,"The system is coming up, please wait.");
+
+    free(m);
+}

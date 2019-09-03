@@ -20,7 +20,7 @@
 #include "asdmenud.h"
 #include "video.h"
 /* Band-Aid, Do They Know It's Christmas?   French Charlies! */
-
+/* Huh? */
 static struct mPalette stdpalette = {NULL,
                                      2,
                                      COLOR(HBRN, BLU),

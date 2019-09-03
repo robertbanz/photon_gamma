@@ -1,4 +1,3 @@
-
 /***********
  gamma.h
 ************/
@@ -26,29 +25,30 @@
 #define REDBASE 0x35
 #define GRNBASE 0x2B
 
-/*ET information*/
-#define ETINTDELAY 30000
-#define ETPOLL 0xd2
-#define BETA_BOTH_RED 0x13
-#define BETA_BOTH_GRN 0x23
-#define BETA_RED 0x32
-#define BETA_GRN 0x31
-#define ALPHA 0x36
-#define OMEGA 0x35
-#define ETINIT 0xd0
-#define ETEND 0x06
-#define SENDRED 0xda
-#define SENDGRN 0xdb
-#define MAINMENU 0xf2
-#define EDITMODE 0xf3
-#define T_E_M 0xf6
-#define S_E 0xf7
-#define C_E_M 0xf8
-#define WAITGC 0xf9
-#define REQXFER 0xfa
-#define START 0xfd
-#define STARTACKN 0xdd
-#define ENDXFER 0xee
+/*ET information*
+#define ETINTDELAY	 30000
+#define ETPOLL          0xd2
+#define BETA_BOTH_RED   0x13
+#define BETA_BOTH_GRN   0x23
+#define BETA_RED        0x32
+#define BETA_GRN        0x31
+#define ALPHA				0x36
+#define OMEGA				0x35
+#define ETINIT          0xd0
+#define ETEND           0x06
+#define SENDRED         0xda
+#define SENDGRN         0xdb
+#define MAINMENU        0xf2
+#define EDITMODE        0xf3
+#define T_E_M           0xf6
+#define S_E             0xf7
+#define C_E_M           0xf8
+#define WAITGC          0xf9
+#define REQXFER         0xfa
+#define START           0xfd
+#define STARTACKN       0xdd
+#define ENDXFER         0xee
+
 
 /*Hostess information*/
 #define BASEPORT 0x240
@@ -136,7 +136,7 @@
     incoming = (byte *)y; \
     *incoming = inp(x);   \
   }
-
+#define fBox(a, b, c, d) sBox(a, c, d, b)
 #define PUBLIC 1
 #define LEAGUE 2
 #define FREEFORALL 3
