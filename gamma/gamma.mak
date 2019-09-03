@@ -6,7 +6,7 @@ PWBRMAKE  = pwbrmake
 NMAKEBSC1  = set
 NMAKEBSC2  = nmake
 CC  = cl
-CFLAGS_G  =  /BATCH
+CFLAGS_G  = /G2 /BATCH
 CFLAGS_D  = /Od /Zi /Gi$(PROJ).mdt
 CFLAGS_R  = /Ot /Ol /Og /Oe /Oi /Gs
 MAPFILE_D  = NUL
@@ -17,6 +17,7 @@ LFLAGS_R  =  /EXE /FAR /PACKC
 LINKER	= link
 ILINK  = ilink
 LRF  = echo > NUL
+CVFLAGS  =  /25
 
 OBJS  = GAMMA.obj GAMMA2.obj GAMMA3.obj CD.obj GLIB.obj NEWCONFI.obj\
 	PODPERF.obj SETUP.obj SETHOST.obj cdromlib.obj

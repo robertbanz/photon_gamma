@@ -231,7 +231,7 @@ void LOBBY_boot(void) {
   v_sends(__DATE__);
   vPosCur(1, 16);
   v_sends("The system is coming up, please wait.");
-  vPage(1);
+  SelectIO(CONS);
 }
 #else
 
@@ -302,7 +302,7 @@ void PrintMessage(int dummy) {
   }
   fclose(fp);
   if (tnum == 10) tnum = 0;
-  vPage(1);
+  SelectIO(CONS);
 #else
 #endif
 }
@@ -378,7 +378,7 @@ void LOBBY_tween() {
     v_printf("%3d", weekly.highhits.hits);
   } else
     v_sends("None yet!  It could be YOU!");
-  vPage(1);
+  SelectIO(CONS);
 #else
 
   sxClear();
@@ -455,14 +455,14 @@ void LOBBY_instokn() {
   v_sends("staging area now !");
 
   /*DispGameModes();*/
-  vPage(1);
+  SelectIO(CONS);
 }
 
 void LOBBY_noxfer() {
   vPage(0);
   vChangeAttr(COLOR(HWHT, BLU));
   vStatLine("", 0, COLOR(HWHT, BLU), 1);
-  vPage(1);
+  SelectIO(CONS);
 }
 void Dig_Digit(int digit, byte x, byte y) {
   int i;
@@ -547,7 +547,7 @@ void LOBBY_alert() {
   vChangeAttr(COLOR(HWHT, BLK));
   v_printf("Manuever #%d is beginning NOW !", game.number);
   vStatLine("", 0, COLOR(BLK, BLK), 1);
-  vPage(1);
+  SelectIO(CONS);
 }
 
 char *GameType(byte type) {
@@ -737,7 +737,7 @@ void LOBBY_game1_update(int naughty) {
   sprintf(ts, "%6d", tsg);
   v_sends(ts);
 
-  vPage(1);
+  SelectIO(CONS);
 }
 
 void LOBBY_game2() { /*PUT TWO FIELD SETUP HERE ! ! !*/ }
@@ -886,7 +886,7 @@ void EtStatus(byte Et1Stat, byte Et2Stat)
 #ifndef EXTENDED_GRAPHICS
   vPage(0);
   vStatLine(ts, 0, COLOR(HWHT, BLU), 1);
-  vPage(1);
+  SelectIO(CONS);
 #else
   if (SSS != oldSSS) {
     int i;

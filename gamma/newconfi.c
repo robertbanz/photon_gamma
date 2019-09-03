@@ -348,17 +348,17 @@ int con_perh(int sel) {
 
 int con_paths(int sel) {
   switch (sel) {
-    case 1:
+    case 0:
       mEditString(newconfig.mess_path, "Enter Message File Path: ", 10, 15, 16);
       break;
-    case 2:
+    case 1:
       mEditString(newconfig.data_path, "Enter Database File Path: ", 10, 15,
                   17);
       break;
-    case 3:
+    case 2:
       mEditString(newconfig.log_path, "Enter Log File Path: ", 10, 15, 18);
       break;
-    case 4:
+    case 3:
       mEditString(newconfig.pod_path, "Enter Pod Perfomance Path: ", 10, 15,
                   19);
       break;

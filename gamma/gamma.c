@@ -98,7 +98,7 @@ main(int argc, char **argv) {
   vPage(0);
   vBlinkControl(BLOFF);
   vCursorControl(CUR_HIDDEN);
-  vPage(1);
+  SelectIO(CONS);
 
   srand((int)(inp(0x40))); /*seed random # generator*/
 
@@ -148,7 +148,7 @@ main(int argc, char **argv) {
   _dos_gettime(&curtime);
   _dos_getdate(&curdate);
 
-  info("-Installing slave...");
+  info("-Installing timer handler");
 
   oldtimer = _dos_getvect(0x1c); /*get old interrupt vector*/
   _dos_setvect(0x1c, poll);      /*replace old with new*/
@@ -173,14 +173,14 @@ main(int argc, char **argv) {
 #ifndef EXTENDED_GRAPHICS
   vPage(0);
   vStatLine("ESTABLISHING ET COMMUNICATIONS", 3, COLOR(BLK, WHT), 1);
-  vPage(1);
+  SelectIO(CONS);
 #else
   sxColorSelect(0, 0);
   sxFontSelect(0);
   sprintf(ts, "ET1:%d, ET2:%d", ET1, ET2);
   sxPrintText(CEN, FBOT | 2, ts);
   sxPrintText(CEN, FBOT | 1, "Establishing ET Communications");
-  vPage(1);
+  SelectIO(CONS);
 #endif
 
   info("-Initialize Et's");
@@ -496,7 +496,7 @@ AfterReConfig: /*Re-entrance if a ctrl=r is done...*/
           two_count = 1;
         }
       }
-      vPage(1);
+      SelectIO(CONS);
     }
   }
   if (bye == TRUE)
@@ -752,7 +752,7 @@ void rungame(void) {
       Dig_Digit((int)(timeremain / 10), 15, 4);
       Dig_Digit((int)(timeremain % 10), 23, 4);
 
-      vPage(1);
+      SelectIO(CONS);
 
       /*send data to the PC*/
       if ((timeremain <= 25) && (pcs == FALSE) && (curconfig.pc == TRUE)) {
@@ -808,7 +808,7 @@ void rungame(void) {
     v_printf("%10s", game.redtm2);
     vPosCur(25, 13);
     v_printf("%10s", game.grntm2);
-    vPage(1);
+    SelectIO(CONS);
   }
 
   UpdateSync(7, 21, sync);
@@ -827,7 +827,7 @@ void rungame(void) {
         UpdateSync(7, 21, sync);
         vPage(0);
         vStatLine("<< TERMINATED >>", 24, COLOR(HWHT, HBLU), 1);
-        vPage(1);
+        SelectIO(CONS);
       }
 
       /* download data to the PC*/
@@ -869,7 +869,7 @@ void rungame(void) {
       if (timeremain > 0) {
         vPage(0);
         vStatLine(tempst, 34, COLOR(HWHT, BLU), 0);
-        vPage(1);
+        SelectIO(CONS);
       }
       PrintMono(6, 21, tempst);
 
@@ -888,7 +888,7 @@ void rungame(void) {
       PrintMono(3, 25, tempst);
       vPage(0);
       vChangeAttr(COLOR(HWHT, BLU));
-      vPage(1);
+      SelectIO(CONS);
       sprintf(tempst, "BS:%3d ES:%3d RB:%d", sbegin, send, badradio);
       PrintMono(10, 1, tempst);
       UpdateView(view);
@@ -911,7 +911,7 @@ void rungame(void) {
 
   vPage(0);
   vStatLine("<< TERMINATED >>", 24, COLOR(HWHT, HBLU), 1);
-  vPage(1);
+  SelectIO(CONS);
 
   /*final score update*/
   doscores();
@@ -949,7 +949,7 @@ void rungame(void) {
 
   ++game.number;
   CheckForHighScores(); /*increment game #*/
-  vPage(1);
+  SelectIO(CONS);
 }
 
 /**************************************************************************
@@ -1322,7 +1322,7 @@ void SendToDC(void) {
     vPage(0);
     vStatLine(" TRANSMITTING RESULTS TO PLANET EARTH  ", 0, COLOR(HWHT, BLU),
               1);
-    vPage(1);
+    SelectIO(CONS);
     for (m = 0; m < 2000;
          ++m) /*Send it...wait for a response after each character!*/
     {
@@ -1646,7 +1646,7 @@ void ControlBootScreen() {
 
   ts = (char *)malloc(100);
 
-  vPage(1);
+  SelectIO(CONS);
   vPosCur(0, 0);
   vChangeAttr(hrcNORM);
   vBox(0xffff, '°', 80, 25);
@@ -1714,7 +1714,7 @@ void MainLoop() {
       SetupMonoIdle(0); /*setup monitor for idle*/
       vPage(0);
       vStatLine("        SUMMARY", 23, COLOR(HWHT, BLU), 1);
-      vPage(1);
+      SelectIO(CONS);
       if ((badradio < 30) && (ctrl_e == FALSE))
         WritePodPerform(); /*write pod performance*/
       else

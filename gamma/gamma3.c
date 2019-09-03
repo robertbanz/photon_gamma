@@ -29,7 +29,7 @@ void UpdateView(byte view) {
   char ts[90];
   int x, y, z;
   int rt1 = 0, rt2 = 0, gt1 = 0, gt2 = 0;
-  vPage(1);
+  SelectIO(CONS);
   if (view != oldview) {
     oldview = view;
     switch (view) {
