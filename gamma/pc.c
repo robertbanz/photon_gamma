@@ -25,7 +25,7 @@ Version .6 060692   Fixed "eat me" mode when game is longer than memory buffer
 void setupslots(void);
 struct dostime_t curtime; /*current time*/
 struct dosdate_t curdate; /*current date*/
-
+int gnumber, gtime;
 FILE *gamelist, *gdata;
 
 void HOST_recvsn(unsigned int port, char *buffer, size_t size);
@@ -78,6 +78,7 @@ int score[40];
 #define ENQMODE 0xE6
 #define CLEAR 0xE7
 #define SAVE 0xE9
+#define STATLINE 0xEA
 
 #define COM 0x2F8
 
@@ -112,7 +113,7 @@ main() {
   byte temp;
   char ftype;
   char gfile[40];
-  char ts[40];
+  char ts[80];
   unsigned char din[40];
   struct com_5 pinfo;
   setupslots();
@@ -123,7 +124,11 @@ main() {
   outp(COM, 0x0c);
   outp(COM + 1, 0x00);
   outp(COM + 3, 3);
-  ASDInit(CGA);
+  if (ASDInit(FINDADAPTER | CO40)) {
+    printf("Error initializing video system.\n");
+    exit(-1);
+  }
+  vPage(0);
   vClearScreen();
   vChangeAttr(COLOR(WHT, BLK));
   vPosCur(1, 1);
@@ -133,7 +138,7 @@ main() {
   asends("All rights reserved");
   vCR();
   vLF();
-  vStatLine("     GAMMA PC 041892 V0.5", 0, COLOR(WHT, BLU), 1);
+  vStatLine("     GAMMA PC/DS 080793 V1.0", 0, COLOR(WHT, BLU), 1);
   while (quit == 0) {
     if (kbhit()) switch (getch()) {
         case 17:
@@ -169,15 +174,19 @@ main() {
           break;
         case INIT:
           vClearScreen();
-          vStatLine("Boot Mode", 4, COLOR(WHT, BLU), 1);
+          vStatLine("System Ready", 4, COLOR(HWHT, BLU), 1);
           break;
         case GAMEMODE:
           vClearScreen();
-          vStatLine("Game Mode", 4, COLOR(WHT, BLU), 1);
+          vStatLine("", 0, COLOR(HWHT, BLU), 1);
           pollnum = 0;
           for (l = 0; l < 360; ++l)
             for (i = 0; i < 40; ++i) GameData[l][i] = 0;
 
+          break;
+        case STATLINE:
+          HOST_recvsn(COM, ts, 40);
+          vStatLine(ts, 0, COLOR(HWHT, BLU), 1);
           break;
         case SENDDATA:
           for (i = 0; i < 40; ++i) {
@@ -192,7 +201,7 @@ main() {
             } while (pinfo.DR == 0);
             pl[i].used = (char)inp(COM);
           }
-          vStatLine("Data Received...", 4, COLOR(WHT, BLU), 1);
+          vStatLine("Game Data Received...", 4, COLOR(HWHT, BLU), 1);
           fflag = 1;
           for (i = 0; i < 40; ++i) {
             pl[i].baseflag = 0;
@@ -200,7 +209,7 @@ main() {
           }
           break;
         case CLEAR:
-          vStatLine("Game <<<TERMINATED>>>", 4, COLOR(WHT, BLU), 1);
+          vStatLine("", 0, COLOR(HWHT, HBLU), 1);
           break;
         case STARTPOLL:
           fflag = 0;
@@ -210,6 +219,22 @@ main() {
             } while (pinfo.DR == 0);
             din[i] = (char)inp(COM);
           }
+          do {
+            ReadPort(COM + 5, &pinfo);
+          } while (pinfo.DR == 0);
+          gnumber = ((byte)(inp(COM))) << 8;
+          do {
+            ReadPort(COM + 5, &pinfo);
+          } while (pinfo.DR == 0);
+          gnumber += (byte)(inp(COM));
+          do {
+            ReadPort(COM + 5, &pinfo);
+          } while (pinfo.DR == 0);
+          gtime = ((byte)(inp(COM))) << 8;
+          do {
+            ReadPort(COM + 5, &pinfo);
+          } while (pinfo.DR == 0);
+          gtime += (byte)(inp(COM));
           break;
         case ENQMODE:
           if (1 == 1) {
@@ -230,8 +255,6 @@ main() {
           if (fflag == 1)
             fflag = 0;
           else {
-            sprintf(ts, "%04d", pollnum++);
-            vStatLine(ts, 30, COLOR(WHT, BLU), 1);
             if (pollnum < 359) memmove(&GameData[pollnum][0], din, 40);
             for (i = 0; i < 40; ++i) {
               if (pl[i].used == 1) {
@@ -311,6 +334,15 @@ main() {
             vChangeAttr(COLOR(WHT, BLK));
             asends(".");
           }
+          if (gtime >= 0) {
+            vStatLine("Game:", 0, COLOR(WHT, BLU), 0);
+            sprintf(ts, "%04d", gnumber);
+            vStatLine(ts, 6, COLOR(HWHT, BLU), 0);
+            sprintf(ts, "%2d:%02d", gtime / 60, gtime % 60);
+            vStatLine("Remaining:", 24, COLOR(WHT, BLU), 0);
+            vStatLine(ts, 34, COLOR(HWHT, BLU), 0);
+          } else
+            vStatLine("<< TERMINATED >>", 24, COLOR(HWHT, HBLU), 1);
           break;
       }
     }

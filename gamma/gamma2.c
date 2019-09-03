@@ -549,7 +549,7 @@ void LOBBY_game1_nice() {
 
   vPosCur(0, 0);
   vChangeAttr(COLOR(HBRN, BLU));
-  /*      0123456789012345678901234567890123456789*/
+
   v_sends(" Score    Player ID         Hits   Base ");
   vPosCur(0, 1);
   vChangeAttr(COLOR(HWHT, CRED));
@@ -814,7 +814,10 @@ void EtStatus(byte Et1Stat, byte Et2Stat)
   strcpy(ts + ((40 - i) / 2), SSS);
   memset(ts + i + ((40 - i) / 2), 32, 40 - strlen(ts));
   ts[41] = 0;
-
+  if (curconfig.pc) {
+    charout(PC, 0xEA);
+    HOST_sendsn(PC, ts, 40);
+  }
   vPage(0);
   vStatLine(ts, 0, COLOR(HWHT, BLU), 1);
   vPage(1);

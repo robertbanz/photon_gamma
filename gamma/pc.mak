@@ -1,5 +1,5 @@
-PROJ = PC
-PROJFILE = PC.MAK
+PROJ = pc
+PROJFILE = pc.mak
 DEBUG = 0
 
 PWBRMAKE  = pwbrmake
@@ -14,13 +14,13 @@ MAPFILE_R  = NUL
 LFLAGS_G  =  /NOI  /BATCH
 LFLAGS_D  = /CO /FAR /PACKC
 LFLAGS_R  =  /FAR /PACKC
-LINKER  = link
+LINKER	= link
 ILINK  = ilink
 LRF  = echo > NUL
 
 OBJS_EXT  = VIDEOD.OBJ
-OBJS	= ASD.obj ASDMENU.obj PC.obj VIDOLD.obj $(OBJS_EXT)
-SBRS	= ASD.sbr ASDMENU.sbr PC.sbr VIDOLD.sbr
+OBJS  = ASD.obj ASDMENU.obj PC.obj video.obj $(OBJS_EXT)
+SBRS  = ASD.sbr ASDMENU.sbr PC.sbr video.sbr
 
 all: $(PROJ).exe
 
@@ -39,19 +39,19 @@ PC.obj : PC.C asd.h asdmenu.h video.h
 
 PC.sbr : PC.C asd.h asdmenu.h video.h
 
-VIDOLD.obj : VIDOLD.C video.h videodat.h
+video.obj : video.c video.h videodat.h
 
-VIDOLD.sbr : VIDOLD.C video.h videodat.h
+video.sbr : video.c video.h videodat.h
 
 
 $(PROJ).bsc : $(SBRS)
-		  $(PWBRMAKE) @<<
+	$(PWBRMAKE) @<<
 $(BRFLAGS) $(SBRS)
 <<
 
 $(PROJ).exe : $(OBJS)
 !IF $(DEBUG)
-		  $(LRF) @<<$(PROJ).lrf
+	$(LRF) @<<$(PROJ).lrf
 $(RT_OBJS: = +^
 ) $(OBJS: = +^
 )
@@ -66,7 +66,7 @@ $(LIBS: = +^
 $(DEF_FILE) $(LFLAGS_G) $(LFLAGS_D);
 <<
 !ELSE
-		  $(LRF) @<<$(PROJ).lrf
+	$(LRF) @<<$(PROJ).lrf
 $(RT_OBJS: = +^
 ) $(OBJS: = +^
 )
@@ -81,26 +81,26 @@ $(LIBS: = +^
 $(DEF_FILE) $(LFLAGS_G) $(LFLAGS_R);
 <<
 !ENDIF
-		  $(LINKER) @$(PROJ).lrf
+	$(LINKER) @$(PROJ).lrf
 
 
 .c.sbr :
 !IF $(DEBUG)
-		  $(CC) /Zs $(CFLAGS_G) $(CFLAGS_D) /FR$@ $<
+	$(CC) /Zs $(CFLAGS_G) $(CFLAGS_D) /FR$@ $<
 !ELSE
-		  $(CC) /Zs $(CFLAGS_G) $(CFLAGS_R) /FR$@ $<
+	$(CC) /Zs $(CFLAGS_G) $(CFLAGS_R) /FR$@ $<
 !ENDIF
 
 .c.obj :
 !IF $(DEBUG)
-		  $(CC) /c $(CFLAGS_G) $(CFLAGS_D) /Fo$@ $<
+	$(CC) /c $(CFLAGS_G) $(CFLAGS_D) /Fo$@ $<
 !ELSE
-		  $(CC) /c $(CFLAGS_G) $(CFLAGS_R) /Fo$@ $<
+	$(CC) /c $(CFLAGS_G) $(CFLAGS_R) /Fo$@ $<
 !ENDIF
 
 
 run: $(PROJ).exe
-		  $(PROJ).exe $(RUNFLAGS)
+	$(PROJ).exe $(RUNFLAGS)
 
 debug: $(PROJ).exe
-		  CV $(CVFLAGS) $(PROJ).exe $(RUNFLAGS)
+	CV $(CVFLAGS) $(PROJ).exe $(RUNFLAGS)

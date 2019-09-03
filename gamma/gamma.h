@@ -57,9 +57,9 @@
 /*Hostess information*/
 #define BASEPORT 0x240
 #define RADIO 0x240
-#define ET1 0x248
+#define ET1 0x2f8
 #define ET2 0x250
-#define DC /*0x258*/ 0x3f8
+#define DC 0x258
 #define EC 0x260
 #define PC 0x268
 #define PS 0x270

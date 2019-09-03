@@ -480,6 +480,7 @@ byte PC_spcl(byte info) {
     case 0xE6:
     case 0xE7:
     case 0xE9:
+    case 0xEA:
     case 0xEE:
       return 1;
       break;
@@ -700,6 +701,7 @@ void rungame(void) {
 
   /*notify lobby of impending game start*/
   setupcga(ALRTSCRN);
+  if (curconfig.pc) charout(PC, 0xE7);
 
   /*syncronize watches!*/
   poll_flag = FALSE;
@@ -724,16 +726,11 @@ void rungame(void) {
   while (timeremain > 0) {
     if (poll_flag == TRUE) {
       poll_flag = FALSE;
-
       /*print COUNTDOWN on status line*/
       vPage(0);
       vChangeAttr(COLOR(CRED, BLK));
       Dig_Digit((int)(timeremain / 10), 15, 4);
       Dig_Digit((int)(timeremain % 10), 23, 4);
-
-      /*sprintf(ts,"%2d",timeremain);
-      vStatLine(ts,34,COLOR(HWHT,BLU),0);
-      */
 
       vPage(1);
 
@@ -807,15 +804,13 @@ void rungame(void) {
         sync = ESYNC;
         UpdateSync(7, 21, sync);
         vPage(0);
-        vStatLine("<<<  TERMINATED  >>> ", 18, COLOR(HWHT, HBLU), 0);
+        vStatLine("<< TERMINATED >>", 24, COLOR(HWHT, HBLU), 1);
         vPage(1);
       }
 
-      /* tell the PC to start expecting a poll*/
-      if (curconfig.pc == TRUE) outp(PC, 0xE4);
-
       /* download data to the PC*/
       if (curconfig.pc == TRUE) {
+        outp(PC, 0xE4);
         for (l = 5; l < 25; ++l) {
           if ((npoll[l] != 0x00) && (npoll[l] < 0xE0))
             charout(PC, npoll[l]);
@@ -832,6 +827,11 @@ void rungame(void) {
           else
             charout(PC, 0x10);
         }
+        /*send current time and manuever number*/
+        charout(PC, (byte)(game.number >> 8));
+        charout(PC, (byte)(game.number & 0xff));
+        charout(PC, (byte)(timeremain >> 8));
+        charout(PC, (byte)(timeremain & 0xff));
         charout(PC, 0xE5);
       }
 
@@ -891,7 +891,7 @@ void rungame(void) {
   UpdateSync(7, 21, sync);
 
   vPage(0);
-  vStatLine("<<<  TERMINATED  >>> ", 18, COLOR(HWHT, HBLU), 0);
+  vStatLine("<< TERMINATED >>", 24, COLOR(HWHT, HBLU), 1);
   vPage(1);
 
   /*final score update*/
@@ -1306,10 +1306,10 @@ void SendToDC(void) {
     info("   ENQ ANSWERED");
     WaitPoll();
     info("-SENDING DATA TO DC");
-    sprintf(ts, "%2d:%02d - %2d-%02d-%02d", curtime.hour, curtime.minute,
+    sprintf(ts, "   %2d:%02d %2d-%02d-%02d", curtime.hour, curtime.minute,
             curdate.month, curdate.day, curdate.year % 100);
     vPage(0);
-    vStatLine(ts, 25, COLOR(HWHT, BLU), 1);
+    vStatLine(ts, 23, COLOR(HWHT, BLU), 1);
     omar = vPageMem(0);
     for (m = 0; m < 2000; ++m) buffer[m] = *(omar++);
 
@@ -1722,7 +1722,7 @@ void MainLoop() {
       rungame();        /*run the game*/
       SetupMonoIdle(0); /*setup monitor for idle*/
       vPage(0);
-      vStatLine("STRATEGIC SUMMARY", 17, COLOR(HWHT, BLU), 1);
+      vStatLine("        SUMMARY", 23, COLOR(HWHT, BLU), 1);
       vPage(1);
       if ((badradio < 30) && (ctrl_e == FALSE))
         WritePodPerform(); /*write pod performance*/
