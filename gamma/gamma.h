@@ -1,10 +1,11 @@
 /***********
  gamma.h
 ************/
+#include <dos.h>
 
-#define SYSTEMVERSION "1.53b"
+#define SYSTEMVERSION "1.9"
 #define SYSTEMNAME "GAMMA"
-#define SYSTEMDATE "08/30/92"
+#define SYSTEMDATE "8/5/93"
 
 #define STORENUM "010" /*3*/ /*the photon store #*/
 #define SITENUM "1" /*2*/    /*what location # for that store*/
@@ -56,7 +57,7 @@
 /*Hostess information*/
 #define BASEPORT 0x240
 #define RADIO 0x240
-#define ET1 0x248 /***0x248***/
+#define ET1 0x248
 #define ET2 0x250
 #define DC 0x258
 #define EC 0x260
@@ -190,6 +191,14 @@ struct playertype {
                                hell they're gonna get it!*/
 };
 
+struct pc_playerinfo {
+  char name[10];
+  int hitopp[40];
+  char baseflag;
+  char used;
+  char reset;
+};
+
 #pragma pack(1)
 struct gamestruct {
   char redtm1[10], grntm1[10], redtm2[10], grntm2[10];
@@ -199,15 +208,26 @@ struct gamestruct {
   int number;
   int length;
 };
-#pragma pack()
 
-#pragma pack(1)
 struct podstruct {
   int id, base, rxmiss, rxbad, txmiss, txbad, valcode, hitackn, hitsent;
   byte podid;
   byte missinrow;
   byte resetflag;
 };
+
+struct gamerec {
+  struct dostime_t curtime;
+  struct dosdate_t curdate;
+  struct {
+    int score;
+    struct podstruct pod;
+  } sp[40];
+  struct gamestruct game;
+  struct pc_playerinfo player[40];
+  byte GameData[360][40];
+};
+
 #pragma pack()
 
 struct com_5 {

@@ -46,6 +46,7 @@ void GetGrnTeam(byte, byte);
 void SelectTrack(byte);
 byte ET_CheckDrop(unsigned int);
 void nl_to_null(char *string);
+void Dig_Digit(int digit, byte x, byte y);
 
 /**************************************
  * DEFINED IN GAMMA3.C                 *

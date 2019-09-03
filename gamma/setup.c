@@ -220,4 +220,3 @@ void FatalError(char *ts) {
   printf("\n\n\n\007\007%s", ts);
   exit(-1);
 }
-

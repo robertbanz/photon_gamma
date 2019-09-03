@@ -708,7 +708,7 @@ void v_sends(unsigned char *in) {
 void v_sendsn(unsigned char *in, int length) {
   unsigned short _far *memory = &vbase.pages.pagemem[vbase.pages.writepos.idx];
   vbase.pages.writepos.idx += length;
-  while (length--) *memory++ = (vbase.pages.curattr << 8) | *in++;
+  while ((length--) && (*in)) *memory++ = (vbase.pages.curattr << 8) | *in++;
 }
 
 void v_printf(unsigned char *inptr, ...) {

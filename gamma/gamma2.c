@@ -207,295 +207,476 @@ void setupslots() {
   slotir[0x41] = 40 + 1;
 }
 
-void setupcga(byte type) {
+void LOBBY_boot(void) {
+  char ts[80];
+  vPage(0);
+  vPosCur(0, 0);
+  vChangeAttr(COLOR(BLK, WHT));
+  vStatLine("", 0, COLOR(BLK, WHT), 1);
+  vBox(0xffff, ' ', 40, 24);
+
+  vChangeAttr(COLOR(HWHT, BLU));
+  vBox(0xffff, ' ', 40, 4);
+
+  vPosCur(1, 0);
+  v_sends("Stimpy, sometimes your wealth of");
+  vPosCur(1, 1);
+  v_sends("ignorance astounds me...this MUST");
+  vPosCur(1, 2);
+  sprintf(ts, "be the Gamma Systems Computer V%s", SYSTEMVERSION);
+  v_sends(ts);
+  vChangeAttr(COLOR(BLK, WHT));
+  vPosCur(1, 6);
+  v_sends("Photon Systems Software");
+  vPosCur(1, 8);
+  v_sends("(c) 1991,92,93 Robert Banz and");
+  vPosCur(10, 9);
+  v_sends("Chris Fanning.");
+  vPosCur(10, 10);
+  v_sends("All Rights Reserved");
+  vPosCur(1, 12);
+  v_sends("Licensed to Quantum Entertainment Inc.");
+  vPosCur(1, 14);
+  v_sends(__DATE__);
+  vPosCur(1, 16);
+  v_sends("The system is coming up, please wait.");
+  vPage(1);
+}
+
+void PrintMessage(int dummy) {
   int x, y;
   FILE *fp;
   char filename[20];
   char ts[90];
   char tempstring[50];
-  char *SSS;
-  CGA_hidecursor();
-  if (type == BOOT) {
-    vPage(0);
-    vPosCur(0, 0);
+
+  sprintf(filename, "%smess.%d", curconfig.mess_path, tnum);
+  if ((fp = fopen(filename, "r")) != NULL) {
+    fgets(tempstring, 40, fp);
+    getc(fp);
+    getc(fp);
+    getc(fp);
     vChangeAttr(COLOR(BLK, WHT));
-    vStatLine("", 0, COLOR(BLK, WHT), 1);
-    vBox(0xffff, ' ', 40, 24);
-    vChangeAttr(COLOR(HWHT, BLU));
-    vPosCur(0, 0);
-    vBox(0xffff, ' ', 40, 4);
-    vPosCur(5, 1);
-    v_printf("THIS IS GAMMA SYSTEMS COMPUTER");
-    vPosCur(10, 2);
-    v_printf("%s.%s.%s.%s.%s", STORENUM, SITENUM, OPTNUM, LICNUM, REVNUM);
-    vChangeAttr(COLOR(BLK, WHT));
-    vPosCur(3, 5);
-    v_printf("PHOTON system software,");
-    vPosCur(8, 6);
-    v_printf("(c) 1991,1992 Robert Banz");
-    vPosCur(8, 7);
-    v_printf("All Rights Reserved");
-    vPosCur(3, 9);
-    v_printf("Some screen displays and other stuff");
-    vPosCur(8, 10);
-    v_printf("(c) 1991,1992 Chris Fanning & John Shappert");
-    vPosCur(3, 12);
-    v_printf("Configuring System ...");
-    vPosCur(8, 15);
-    v_printf("Core:083092 w/(rel BETA 062187)");
-    vPosCur(8, 16);
-    v_printf("  PC:060692 w/(rel 0.6  060692)");
-    vPosCur(8, 17);
-    v_printf("  DC:080192 w/(rel 1.5b 080192)");
-    vPosCur(8, 18);
-    v_printf("  ET:011092 w/(rel BETA 062187)");
-    vPage(1);
-  } else if (type == TWEENTEXT) {
-    vPage(0);
-    vChangeAttr(COLOR(BLK, WHT));
-    vPosCur(0, 0);
-    vBox(0xffff, ' ', 40, 24);
-    vStatLine("", 0, COLOR(HWHT, BLU), 1);
-    vPosCur(0, 0);
-    vChangeAttr(COLOR(HWHT, BLU));
-    vBox(0xffff, ' ', 40, 4);
-    vPosCur(0, 16);
-    vBox(0xffff, ' ', 40, 1);
-    vChangeAttr(COLOR(BLU, WHT));
-    vPosCur(0, 23);
-    vBox(0xffff, 220, 40, 1);
-    vChangeAttr(COLOR(HWHT, BLU));
-    vPosCur(5, 1);
-    v_printf("THIS IS GAMMA SYSTEMS COMPUTER");
-    vPosCur(10, 2);
-    v_printf("%s.%s.%s.%s.%s", STORENUM, SITENUM, OPTNUM, LICNUM, REVNUM);
-    vChangeAttr(COLOR(BLU, WHT));
-    vPosCur(5, 18);
-    v_printf("ET TRANSPORT LINK NOW OPEN:");
-    vPosCur(5, 20);
-    v_printf("EARTH MAY NOW BEGIN TRANSPORTING");
-    vPosCur(5, 21);
-    v_printf("WARRIORS TO PLANET PHOTON.");
-    ++tnum;
-    sprintf(filename, "%smess.%d", curconfig.mess_path, tnum);
-    if ((fp = fopen(filename, "r")) != NULL) {
-      fgets(tempstring, 40, fp);
-      getc(fp);
-      getc(fp);
-      getc(fp);
-      for (y = 0; y < 10; ++y) { /*add 5 to y when printing*/
-        fgets(textinfo[y], 40, fp);
-        nl_to_null(textinfo[y]);
-        fgetc(fp);
-        vPosCur(0, (byte)(y + 5));
-        vChangeAttr(COLOR(BLK, WHT));
-        v_sends(textinfo[y]);
-      }
-    }
-    fclose(fp);
-    if (tnum == 10) tnum = 0;
-    vPage(1);
-  } else if (type == INSTOKN) {
-    vPage(0);
-    vPosCur(0, 0);
-    vChangeAttr(COLOR(BLK, WHT));
-    vBox(0xffff, ' ', 40, 24);
-    vStatLine("", 0, COLOR(BLK, WHT), 1);
-    vPosCur(0, 0);
-    vChangeAttr(COLOR(HWHT, BLU));
-    vBox(0xffff, ' ', 40, 4);
-    vPosCur(0, 18);
-    vChangeAttr(COLOR(BLU, WHT));
-    vBox(0xffff, 220, 40, 1);
-    vPosCur(0, 23);
-    vBox(0xffff, 220, 40, 1);
-    vPosCur(0, 15);
-    vBox(0xffff, 220, 40, 1);
-    vPosCur(8, 17);
-    vChangeAttr(COLOR(CRED, HWHT));
-    if (curconfig.ps == TRUE)
-      v_printf("INSERT YOUR TOKENS NOW!!!");
-    else
-      v_printf("     CONDITION YELLOW    ");
-    vChangeAttr(COLOR(HWHT, BLU));
-    vPosCur(5, 1);
-    v_printf("THIS IS GAMMA SYSTEMS COMPUTER");
-    vPosCur(10, 2);
-    v_printf("%s.%s.%s.%s.%s", STORENUM, SITENUM, OPTNUM, LICNUM, REVNUM);
+    vPosCur(0, 3);
+    vBox(0xffff, ' ', 40, 10);
     for (y = 0; y < 10; ++y) {
-      vPosCur(0, (byte)(y + 5));
-      vChangeAttr(COLOR(BLK, WHT));
+      fgets(textinfo[y], 40, fp);
+      nl_to_null(textinfo[y]);
+      fgetc(fp);
+      vPosCur(0, (byte)(y + 3));
       v_sends(textinfo[y]);
     }
-    DispGameModes();
-    vPage(1);
+  }
+  fclose(fp);
+  if (tnum == 10) tnum = 0;
+  vPage(1);
+}
+
+char *TitleString = "Photon Systems Computer ALPHA_01";
+
+void LOBBY_tween() {
+  int x, y;
+  char ts[90];
+  char *SSS;
+
+  vPage(0);
+  vChangeAttr(COLOR(BLK, WHT));
+  vPosCur(0, 0);
+  vBox(0xffff, ' ', 40, 24);
+  vChangeAttr(COLOR(HWHT, BLU));
+  vBox(0xffff, ' ', strlen(TitleString) + 2, 2);
+  v_sends(TitleString);
+  vChangeAttr(COLOR(BLK, WHT));
+  vPosCur(0, 2);
+  vRepeat('Í', strlen(TitleString) + 2);
+  for (i = 0; i < 2; ++i) {
+    vPosCur(strlen(TitleString) + 2, i);
+    vPutch('³');
+  }
+  vPosCur(strlen(TitleString) + 2, 2);
+  vPutch('¾');
+  vPosCur(0, 13);
+  vBorder(40, 8, 2);
+  vPosCur(1, 13);
+  vChangeAttr(COLOR(WHT, BLU));
+  vRepeat('ß', 38);
+  vPosCur(1, 20);
+  vRepeat('Ü', 38);
+  vPosCur(1, 14);
+  vBox(0xffff, ' ', 38, 6);
+  vChangeAttr(COLOR(BLK, WHT));
+  vPosCur(1, 21);
+  v_sends("Photon Time");
+  vPosCur(26, 21);
+  v_sends("Next Manuever");
+  vPosCur(30, 22);
+  v_printf("%04d", game.number);
+  vChangeAttr(COLOR(BLK, WHT));
+  vPosCur(4, 22);
+  sprintf(ts, "%2d:%02d", (int)curtime.hour, (int)curtime.minute);
+  v_sends(ts);
+  PrintMessage(++tnum);
+  vPage(1);
+}
+
+void LOBBY_instokn() {
+  int y;
+  char ts[80];
+
+  vPage(0);
+  vChangeAttr(COLOR(BLK, WHT));
+  vPosCur(0, 0);
+  vBox(0xffff, ' ', 40, 24);
+  vChangeAttr(COLOR(HWHT, BLU));
+  vBox(0xffff, ' ', strlen(TitleString) + 2, 2);
+  v_sends(TitleString);
+  vChangeAttr(COLOR(BLK, WHT));
+  vPosCur(0, 2);
+  vRepeat('Í', strlen(TitleString) + 2);
+  for (i = 0; i < 2; ++i) {
+    vPosCur(strlen(TitleString) + 2, i);
+    vPutch('³');
+  }
+  vPosCur(strlen(TitleString) + 2, 2);
+  vPutch('¾');
+  vPosCur(0, 13);
+  vBorder(40, 8, 2);
+  vPosCur(1, 13);
+  vChangeAttr(COLOR(WHT, BLU));
+  vRepeat('ß', 38);
+  vPosCur(1, 20);
+  vRepeat('Ü', 38);
+  vPosCur(1, 14);
+  vBox(0xffff, ' ', 38, 6);
+  vChangeAttr(COLOR(BLK, WHT));
+  vPosCur(1, 21);
+  v_sends("Photon Time");
+  vPosCur(26, 21);
+  v_sends("Next Manuever");
+  vPosCur(30, 22);
+  v_printf("%04d", game.number);
+  vChangeAttr(COLOR(BLK, WHT));
+  vPosCur(4, 22);
+  sprintf(ts, "%2d:%02d", (int)curtime.hour, (int)curtime.minute);
+  v_sends(ts);
+  PrintMessage(((tnum == 0) ? tnum++ : tnum));
+  vPage(0);
+  vPosCur(2, 14);
+  vChangeAttr(COLOR(BLK, WHT));
+  vBox(0xffff, ' ', 36, 6);
+  vChangeAttr(COLOR(CRED, HWHT));
+  vPosCur(3, 14);
+  v_sends("*ATTENTION:*");
+  vChangeAttr(COLOR(BLK, WHT));
+  vPosCur(16, 14);
+  v_sends("Maneuver in final");
+  vPosCur(4, 15);
+  v_sends("phase of staging.");
+  vPosCur(4, 18);
+  v_sends("Next maneuver please report to");
+  vPosCur(4, 19);
+  v_sends("staging area now !");
+
+  /*DispGameModes();*/
+  vPage(1);
+}
+
+void LOBBY_noxfer() {
+  vPage(0);
+  vChangeAttr(COLOR(HWHT, BLU));
+  vStatLine("", 0, COLOR(HWHT, BLU), 1);
+  vPage(1);
+}
+void Dig_Digit(int digit, byte x, byte y) {
+  int i;
+  static char data[10][7] = {{1, 1, 1, 1, 1, 1, 0}, {0, 1, 1, 0, 0, 0, 0},
+                             {1, 1, 0, 1, 1, 0, 1}, {1, 1, 1, 1, 0, 0, 1},
+                             {0, 1, 1, 0, 0, 1, 1}, {1, 0, 1, 1, 0, 1, 1},
+                             {1, 0, 1, 1, 1, 1, 1}, {1, 1, 1, 0, 0, 0, 0},
+                             {1, 1, 1, 1, 1, 1, 1}, {1, 1, 1, 1, 0, 1, 1}};
+  static char s[7][4] = {{1, 0, 4, 1}, {5, 1, 1, 2}, {5, 4, 1, 2}, {1, 6, 4, 1},
+                         {0, 4, 1, 2}, {0, 1, 1, 2}, {1, 3, 4, 1}};
+  vPosCur(x, y);
+  vBox(0xffff, ' ', 6, 7);
+
+  if ((digit >= 0) && (digit < 10)) {
+    for (i = 0; i < 7; ++i) {
+      if (data[digit][i]) {
+        vPosCur(x + s[i][0], y + s[i][1]);
+        vBox(0xffff, 219, s[i][2], s[i][3]);
+      }
+    }
+  }
+}
+
+void LOBBY_alert() {
+  char ts[80];
+  int i;
+  char *alert[4] = {
+      "      ÜßßÜ Û   Ûßßß ÛßßÜ ßßÛßß", "  þ   Û  Û Û   Û    Û  Û   Û     þ",
+      "  þ   ÛßßÛ Û   Ûßß  ÛßßÜ   Û     þ", "      Û  Û ÛÜÜ ÛÜÜÜ Û  Û   Û"};
+
+  vPage(0);
+  vChangeAttr(COLOR(HWHT, BLK));
+  vPosCur(0, 0);
+  vBox(0xffff, ' ', 40, 24);
+  vChangeAttr(COLOR(HWHT, BLU));
+  vBox(0xffff, ' ', strlen(TitleString) + 2, 2);
+  v_sends(TitleString);
+  vChangeAttr(COLOR(HWHT, BLK));
+  vPosCur(0, 2);
+  vRepeat('Í', strlen(TitleString) + 2);
+  for (i = 0; i < 2; ++i) {
+    vPosCur(strlen(TitleString) + 2, i);
+    vPutch('³');
+  }
+  vPosCur(strlen(TitleString) + 2, 2);
+  vPutch('¾');
+  vChangeAttr(COLOR(BLU, BLK));
+  vPosCur(7, 6);
+  vPutch('ß');
+  vPosCur(8, 6);
+  vPutch('Û');
+  vPosCur(9, 6);
+  vPutch('ß');
+  vPosCur(8, 7);
+  vPutch('Û');
+  vPosCur(8, 8);
+  vPutch('ß');
+  vPosCur(11, 7);
+  v_sends("ßß");
+  vChangeAttr(COLOR(HWHT, BLK));
+  vPosCur(0, 13);
+  vBorder(40, 8, 2);
+  vPosCur(1, 13);
+  vChangeAttr(COLOR(BLK, BLU));
+  vRepeat('ß', 38);
+  vPosCur(1, 20);
+  vRepeat('Ü', 38);
+  vPosCur(1, 14);
+  vBox(0xffff, ' ', 38, 6);
+  vChangeAttr(COLOR(CRED, HWHT));
+  vPosCur(2, 14);
+  vBox(0xffff, ' ', 36, 6);
+  for (i = 0; i < 4; ++i) {
+    vPosCur(2, i + 15);
+    v_sends(alert[i]);
+  }
+  vPosCur(5, 22);
+  vChangeAttr(COLOR(HWHT, BLK));
+  v_printf("Manuever #%d is beginning NOW !", game.number);
+  vStatLine("", 0, COLOR(BLK, BLK), 1);
+  vPage(1);
+}
+
+char *GameType(byte type) {
+  switch (type) {
+    case PUBLIC:
+      return ("PUBLIC");
+      break;
+    case LEAGUE:
+      return ("LEAGUE");
+      break;
+    case FREEFORALL:
+      return ("FREE FOR ALL");
+      break;
+    default:
+      return ("unknown mode");
+      break;
+  }
+}
+
+void LOBBY_game1_naughty() {
+  char ts[20];
+
+  vPage(0);
+  vChangeAttr(COLOR(WHT, BLK));
+  vPosCur(0, 0);
+  vBox(0xffff, ' ', 40, 25);
+
+  vPosCur(0, 0);
+  vChangeAttr(COLOR(HBRN, BLU));
+  v_sends(" Score Player ID        Hits OwnP Shot B");
+  vPosCur(0, 1);
+  vChangeAttr(COLOR(HWHT, CRED));
+  vBox(0xffff, ' ', 40, 1);
+  vPosCur(7, 1);
+  v_sendsn(game.redtm1, 10);
+  vPosCur(0, 13);
+  vChangeAttr(COLOR(HWHT, GRN));
+  vBox(0xffff, ' ', 40, 1);
+  vPosCur(7, 13);
+  v_sendsn(game.grntm1, 10);
+
+  vStatLine("Game:", 0, COLOR(WHT, BLU), 1);
+  vStatLine("Remaining:", 24, COLOR(WHT, BLU), 0);
+  sprintf(ts, "%04d", game.number);
+  vStatLine(ts, 6, COLOR(HWHT, BLU), 0);
+  if (game.mode1 != PUBLIC)
+    vStatLine(GameType(game.mode1), 11, COLOR(HWHT, BLU), 0);
+}
+
+void LOBBY_game1_nice() {
+  char ts[20];
+
+  vPage(0);
+  vChangeAttr(COLOR(WHT, BLK));
+  vPosCur(0, 0);
+  vBox(0xffff, ' ', 40, 25);
+
+  vPosCur(0, 0);
+  vChangeAttr(COLOR(HBRN, BLU));
+  /*      0123456789012345678901234567890123456789*/
+  v_sends(" Score    Player ID         Hits   Base ");
+  vPosCur(0, 1);
+  vChangeAttr(COLOR(HWHT, CRED));
+  vBox(0xffff, ' ', 40, 1);
+  vPosCur(10, 1);
+  v_sendsn(game.redtm1, 10);
+  vPosCur(0, 13);
+  vChangeAttr(COLOR(HWHT, GRN));
+  vBox(0xffff, ' ', 40, 1);
+  vPosCur(10, 13);
+  v_sendsn(game.grntm1, 10);
+
+  vStatLine("Game:", 0, COLOR(WHT, BLU), 1);
+  vStatLine("Remaining:", 24, COLOR(WHT, BLU), 0);
+  sprintf(ts, "%04d", game.number);
+  vStatLine(ts, 6, COLOR(HWHT, BLU), 0);
+  if (game.mode1 != PUBLIC)
+    vStatLine(GameType(game.mode1), 11, COLOR(HWHT, BLU), 0);
+}
+
+void LOBBY_game1() {
+  if ((curconfig.newscr > 1) ||
+      ((curconfig.newscr == 1) && (game.mode1 != PUBLIC)))
+    LOBBY_game1_naughty();
+  else
+    LOBBY_game1_nice();
+}
+
+int LOBBY_game1_teamud(int color, int naughty) {
+  int othercolor, base, obase, vcolor, vbase;
+  int hits = 0, gethits = 0, hitown = 0, bases = 0, teamscore = 0;
+  char ts[10];
+
+  if (color == RED) {
+    othercolor = GREEN;
+    base = 0;
+    obase = 20;
+    vcolor = CRED;
+    vbase = 1;
+  } else {
+    othercolor = RED;
+    base = 20;
+    obase = 0;
+    vcolor = GRN;
+    vbase = 13;
   }
 
-  else if (type == NOXFER) {
-    vPage(0);
-    vChangeAttr(COLOR(HWHT, BLU));
-    vPosCur(0, 23);
-    vBox(0xffff, ' ', 40, 1);
-    vStatLine("", 0, COLOR(HWHT, BLU), 1);
-    vPage(1);
-  } else if (type == ALRTSCRN) {
-    vPage(0);
-    vPosCur(0, 0);
-    vChangeAttr(COLOR(BLK, WHT));
-    vBox(0xffff, ' ', 40, 24);
-    vPosCur(0, 0);
-    vChangeAttr(COLOR(HWHT, BLU));
-    vBox(0xffff, ' ', 40, 4);
-    vPosCur(5, 1);
-    v_printf("THIS IS GAMMA SYSTEMS COMPUTER");
-    vPosCur(10, 2);
-    v_printf("%s.%s.%s.%s.%s", STORENUM, SITENUM, OPTNUM, LICNUM, REVNUM);
-    vChangeAttr(COLOR(CRED, HWHT));
-    if (curconfig.ps == TRUE) {
-      vPosCur(3, 17);
-      v_printf("EARTHLINGS MAN YOUR PHASOR STATIONS");
+  for (i = 1; i <= players[color][0]; ++i) {
+    if ((i == 1) &&
+        (rankplayer[base + 1]->score > rankplayer[obase + 1]->score) &&
+        players[othercolor][0])
+      vChangeAttr(COLOR(vcolor, HBLK));
+    else
+      vChangeAttr(COLOR(vcolor, BLK));
+    if (naughty) {
+      vPosCur(7, vbase + i);
+      v_sendsn(rankplayer[base + i]->name, 10);
+      vPosCur(0, vbase + i);
+      sprintf(ts, "%6d", rankplayer[base + i]->score);
+      v_sends(ts);
+      vChangeAttr(COLOR(vcolor, BLK));
+      vPosCur(24, vbase + i);
+      v_printf("%4d %4d %4d %c", rankplayer[base + i]->hits,
+               rankplayer[base + i]->hitown, rankplayer[base + i]->gethit,
+               ((rankplayer[base + i]->baseflag) ? '*' : ' '));
     } else {
-      vPosCur(3, 17);
-      v_printf("         CONDITION RED");
+      vPosCur(10, vbase + i);
+      v_sendsn(rankplayer[base + i]->name, 10);
+      vPosCur(0, vbase + i);
+      sprintf(ts, "%6d", rankplayer[base + i]->score);
+      v_sends(ts);
+      vChangeAttr(COLOR(vcolor, BLK));
+      vPosCur(28, vbase + i);
+      v_printf("%4d    %c", rankplayer[base + i]->hits,
+               ((rankplayer[base + i]->baseflag) ? '*' : ' '));
     }
-    vPosCur(0, 18);
-    vChangeAttr(COLOR(BLU, WHT));
-    vBox(0xffff, 220, 40, 1);
-    vPosCur(0, 23);
-    vBox(0xffff, 220, 40, 1);
-    vChangeAttr(COLOR(BLK, WHT));
-    sprintf(ts, "%2d", game.number);
-    vStatLine("   MANEUVER #   START IN ----->T-   sec", 0, COLOR(HWHT, BLU),
-              1);
-    vStatLine(ts, 13, COLOR(HWHT, BLU), 0);
 
-    vChangeAttr(COLOR(CRED, HWHT));
-    vPosCur(8, 6);
-    v_printf(" ÛÛ  Û    ÛÛÛÛ ÛÛÛÝ ÛÛÛÛÛ");
-    vPosCur(8, 7);
-    v_printf("ÞÝÞÝ Û    Û    Û ÞÛ   Û");
-    vPosCur(8, 8);
-    v_printf("Û  Û Û    Û    Û  Û   Û");
-    vPosCur(8, 9);
-    v_printf("Û  Û Û    Û    Û ÞÛ   Û");
-    vPosCur(8, 10);
-    v_printf("Û  Û Û    ÛÛÛ  ÛÛÛÝ   Û");
-    vPosCur(8, 11);
-    v_printf("ÛÛÛÛ Û    Û    Û ÞÝ   Û");
-    vPosCur(8, 12);
-    v_printf("Û  Û Û    Û    Û  Û   Û");
-    vPosCur(8, 13);
-    v_printf("Û  Û Û    Û    Û  Û   Û");
-    vPosCur(8, 14);
-    v_printf("Û  Û ÛÛÛÛ ÛÛÛÛ Û  Û   Û");
-    DispGameModes();
-    vPage(1);
-  } else if (type == GAME1) {
-    if ((curconfig.newscr > 1) ||
-        ((curconfig.newscr == 1) && (game.mode1 != PUBLIC))) {
-      vPage(0);
-      vChangeAttr(COLOR(WHT, BLK));
-      vClearScreen();
-      sprintf(ts, " Maneuver %04d      Time Remaining", game.number);
-      vStatLine(ts, 0, COLOR(HWHT, BLU), 1);
-      vChangeAttr(COLOR(HWHT, BLU));
-      vPosCur(0, 0);
-      v_sends(" Photon ID        Hits Down OwnP  Score ");
-      vPosCur(0, 23);
-      switch (game.mode1) {
-        case LEAGUE:
-          SSS = "LEAGUE";
-          break;
-        case FREEFORALL:
-          SSS = "FREE FOR ALL";
-          break;
-        case PUBLIC:
-          SSS = "PUBLIC";
-          break;
-        default:
-          SSS = "Unknown";
-          break;
-      }
-
-      v_printf(" %-16s    %2d:%02d - %2d-%02d-%04d ", SSS, curtime.hour,
-               curtime.minute, curdate.month, curdate.day, curdate.year);
-      vPosCur(0, 1);
-      vChangeAttr(COLOR(HWHT, CRED));
-      vLineEdit(9);
-      v_printf(" %10s", game.redtm1);
-      vPosCur(0, 12);
-      vChangeAttr(COLOR(HWHT, GRN));
-      vLineEdit(9);
-      v_printf(" %10s", game.grntm1);
-      vPage(1);
-    } else {
-      vPage(0);
-      vChangeAttr(COLOR(WHT, BLK));
-      vClearScreen();
-      sprintf(ts, " Maneuver %04d      Time Remaining", game.number);
-      vStatLine(ts, 0, COLOR(HWHT, BLU), 1);
-      vChangeAttr(COLOR(HWHT, BLU));
-      vPosCur(0, 0);
-      v_sends("    Photon ID            Hits    Score  ");
-      vPosCur(0, 23);
-      switch (game.mode1) {
-        case LEAGUE:
-          SSS = "LEAGUE";
-          break;
-        case FREEFORALL:
-          SSS = "FREE FOR ALL";
-          break;
-        case PUBLIC:
-          SSS = "PUBLIC";
-          break;
-        default:
-          SSS = "Unknown";
-          break;
-      }
-
-      v_printf(" %-16s    %2d:%02d - %2d-%02d-%04d ", SSS, curtime.hour,
-               curtime.minute, curdate.month, curdate.day, curdate.year);
-      vPosCur(0, 1);
-      vChangeAttr(COLOR(HWHT, CRED));
-      vLineEdit(9);
-      v_printf("    %10s", game.redtm1);
-      vPosCur(0, 12);
-      vChangeAttr(COLOR(HWHT, GRN));
-      vLineEdit(9);
-      v_printf("    %10s", game.grntm1);
-      vPage(1);
-    }
+    gethits += rankplayer[base + i]->gethit;
+    hits += rankplayer[base + i]->hits;
+    hitown += rankplayer[base + i]->hitown;
+    bases += (rankplayer[base + i]->baseflag ? 1 : 0);
+    teamscore += rankplayer[base + i]->score;
   }
+  vPosCur(24, vbase);
 
-  /***************************** THIS IS WHERE WE'RE GONNA WORK ******/
-  else if (type == GAME2) {
-    for (y = 0; y < 25; ++y)
-      for (x = 0; x < 40; ++x) cga1[0][y][x] = BLUEA | GRNA | REDA | INTA;
-    for (y = 2; y <= 10; ++y)
-      for (x = 1; x <= 18; ++x) cga1[0][y][x] = REDA | INTA;
-    for (y = 2; y <= 10; ++y)
-      for (x = 20; x <= 37; ++x) cga1[0][y][x] = GRNA | INTA;
-    for (y = 14; y <= 23; ++y)
-      for (x = 1; x <= 18; ++x) cga1[0][y][x] = REDA | INTA;
-    for (y = 14; y <= 23; ++y)
-      for (x = 20; x <= 37; ++x) cga1[0][y][x] = GRNA | INTA;
+  vChangeAttr(COLOR(HWHT, vcolor));
+  if (naughty)
+    v_printf("%4d %4d %4d %c", hits, hitown, gethits,
+             ((bases == players[color][0]) ? '*' : ' '));
+  else
+    v_printf("    %4d    %c", hits, ((bases == players[color][0]) ? '*' : ' '));
 
-    for (y = 0; y < 25; ++y) {
-      cga1[0][y][38] = BLUEAb | GRNA | BLUEA | REDA;
-      cga1[0][y][39] = BLUEAb | GRNA | BLUEA | REDA;
-    }
-    for (x = 0; x < 40; ++x) cga1[0][12][x] = BLUEAb | GRNA | BLUEA | REDA;
-    cga1[0][12][10] = BLUEAb | GRNA | BLUEA | REDA | INTA;
-    cga1[0][12][11] = BLUEAb | GRNA | BLUEA | REDA | INTA;
-    cga1[0][12][32] = BLUEAb | GRNA | BLUEA | REDA | INTA;
-    cga1[0][12][33] = BLUEAb | GRNA | BLUEA | REDA | INTA;
-    cga1[0][12][34] = BLUEAb | GRNA | BLUEA | REDA | INTA;
-    sprintf(&cga1[1][12][1], "MANEUVER XX     TIME REMAINING XXXsec");
-    for (x = 0; x < 38; ++x) {
-      cga1[0][11][x] = GRNA | BLUEA | REDA | INTA;
-      cga1[0][13][x] = GRNA | BLUEA | REDA | INTA;
-      cga1[0][24][x] = GRNA | BLUEA | REDA | INTA;
-    }
+  return teamscore;
+}
+
+LOBBY_game1_update(int naughty) {
+  int tsr, tsg;
+  char ts[10];
+  int where;
+  vPage(0);
+
+  /* the RAD team*/
+  tsr = LOBBY_game1_teamud(RED, naughty);
+  tsg = LOBBY_game1_teamud(GREEN, naughty);
+
+  if (tsr > tsg)
+    vChangeAttr(COLOR(HWHT, HRED));
+  else
+    vChangeAttr(COLOR(HWHT, CRED));
+  vPosCur(0, 1);
+  sprintf(ts, "%6d", tsr);
+  v_sends(ts);
+
+  if (tsg > tsr)
+    vChangeAttr(COLOR(HWHT, HGRN));
+  else
+    vChangeAttr(COLOR(HWHT, GRN));
+  vPosCur(0, 13);
+  sprintf(ts, "%6d", tsg);
+  v_sends(ts);
+
+  vPage(1);
+}
+
+void LOBBY_game2() { /*PUT TWO FIELD SETUP HERE ! ! !*/ }
+
+void setupcga(byte type) {
+  CGA_hidecursor();
+  switch (type) {
+    case BOOT:
+      LOBBY_boot();
+      break;
+    case TWEENTEXT:
+      LOBBY_tween();
+      break;
+    case INSTOKN:
+      LOBBY_instokn();
+      break;
+    case NOXFER:
+      LOBBY_noxfer();
+      break;
+    case ALRTSCRN:
+      LOBBY_alert();
+      break;
+    case GAME1:
+      LOBBY_game1();
+      break;
+    case GAME2:
+      LOBBY_game2();
+      break;
   }
 }
 
@@ -544,68 +725,79 @@ void EtStatus(byte Et1Stat, byte Et2Stat)
 
 { /* 0123456789012345678901234567890123456789 */
   char *SSS;
+  char ts[42];
+  int i;
   if (Et1Stat == 1) {
-    if (curconfig.field == 2) SSS = "          READING ALPHA ET CODES        ";
-    if (curconfig.field == 1) SSS = "           READING RED ET CODES         ";
-    if (Et2Stat == 4) SSS = "             READING ET CODES           ";
+    if (curconfig.field == 2) SSS = "READING ALPHA ET CODES";
+    if (curconfig.field == 1) SSS = "READING RED ET CODES";
+    if (Et2Stat == 4) SSS = "READING ET CODES";
   } else if (Et2Stat == 1) {
-    if (curconfig.field == 2) SSS = "          READING OMEGA ET CODES        ";
-    if (curconfig.field == 1) SSS = "          READING GREEN ET CODES        ";
-    if (Et1Stat == 4) SSS = "             READING ET CODES           ";
+    if (curconfig.field == 2) SSS = "READING OMEGA ET CODES";
+    if (curconfig.field == 1) SSS = "READING GREEN ET CODES";
+    if (Et1Stat == 4) SSS = "READING ET CODES";
   } else if ((Et1Stat == 0) & (Et2Stat == 0))
-    SSS = "            AWAITING ET CODES           ";
+    SSS = "AWAITING ET CODES";
   else if (Et1Stat == 0) {
     if (Et2Stat == 4)
-      SSS = "            AWAITING ET CODES           ";
+      SSS = "AWAITING ET CODES";
     else if (curconfig.field == 2)
-      SSS = "         AWAITING ALPHA ET CODES        ";
+      SSS = "AWAITING ALPHA ET CODES";
     else if (curconfig.field == 1)
-      SSS = "          AWAITING RED ET CODES         ";
+      SSS = "AWAITING RED ET CODES";
   } else if (Et2Stat == 0) {
     if (Et1Stat == 4)
-      SSS = "            AWAITING ET CODES           ";
+      SSS = "AWAITING ET CODES";
     else if (curconfig.field == 2)
-      SSS = "         AWAITING OMEGA ET CODES        ";
+      SSS = "AWAITING OMEGA ET CODES";
     else if (curconfig.field == 1)
-      SSS = "         AWAITING GREEN ET CODES        ";
+      SSS = "AWAITING GREEN ET CODES";
   } else if ((Et1Stat == 2) & (Et2Stat == 2))
-    SSS = "           AWAITING ET STARTS           ";
+    SSS = "AWAITING ET STARTS";
   else if (Et1Stat == 2) {
     if (Et2Stat == 4)
-      SSS = "            AWAITING ET START           ";
+      SSS = "AWAITING ET START";
     else if (curconfig.field == 2)
-      SSS = "         AWAITING ALPHA ET START        ";
+      SSS = "AWAITING ALPHA ET START";
     else if (curconfig.field == 1)
-      SSS = "          AWAITING RED ET START         ";
+      SSS = "AWAITING RED ET START";
   } else if (Et2Stat == 2) {
     if (Et1Stat == 4)
-      SSS = "            AWAITING ET START           ";
+      SSS = "AWAITING ET START";
     else if (curconfig.field == 2)
-      SSS = "         AWAITING OMEGA ET START        ";
+      SSS = "AWAITING OMEGA ET START";
     else if (curconfig.field == 1)
-      SSS = "         AWAITING GREEN ET START        ";
+      SSS = "AWAITING GREEN ET START";
   } else if ((Et1Stat == 3) & (Et2Stat == 3))
-    SSS = "          AWAITING FIELD STARTS         ";
+    SSS = "AWAITING FIELD STARTS";
   else if (Et1Stat == 3) {
     if (Et2Stat == 4)
-      SSS = "           AWAITING FIELD START         ";
+      SSS = "AWAITING FIELD START";
     else if (curconfig.field == 2)
-      SSS = "         AWAITING ALPHA FIELD START 	   ";
+      SSS = "AWAITING ALPHA FIELD START";
     else if (curconfig.field == 1)
-      SSS = "         AWAITING RED FIELD START       ";
+      SSS = "AWAITING RED FIELD START";
   } else if (Et2Stat == 3) {
     if (Et1Stat == 4)
-      SSS = "           AWAITING FIELD START         ";
+      SSS = "AWAITING FIELD START";
     else if (curconfig.field == 2)
-      SSS = "        AWAITING OMEGA FIELD START      ";
+      SSS = "AWAITING OMEGA FIELD START";
     else if (curconfig.field == 1)
-      SSS = "        AWAITING GREEN FIELD START       ";
+      SSS = "AWAITING GREEN FIELD START";
   } else
-    SSS = "";
+    SSS = "-*- et error -*-";
+
+  i = strlen(SSS);
+  memset(ts, 32, (40 - i) / 2);
+  strcpy(ts + ((40 - i) / 2), SSS);
+  memset(ts + i + ((40 - i) / 2), 32, 40 - strlen(ts));
+  ts[41] = 0;
+
   vPage(0);
-  vStatLine(SSS, 0, COLOR(HWHT, BLU), 1);
+  vStatLine(ts, 0, COLOR(HWHT, BLU), 1);
   vPage(1);
 }
+
+/*this stuff sucks.  rewrite it or I'll kill me*/
 
 void GetRedTeam(byte teams, byte who) {
   int m, o;

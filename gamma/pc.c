@@ -22,10 +22,6 @@ Version .4 041792   "Tournament" mode actually did something!
 Version .5 041892   Fixed double printing fuck ups.
 Version .6 060692   Fixed "eat me" mode when game is longer than memory buffer
 *******************************************/
-/*******************************************
-Uses display routines created by Chris Fanning
-********************************************/
-
 void setupslots(void);
 struct dostime_t curtime; /*current time*/
 struct dosdate_t curdate; /*current date*/

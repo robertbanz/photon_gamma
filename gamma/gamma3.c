@@ -20,8 +20,11 @@
                         Hotkeys listed
 071993_ We're back! (no sir, didn't like it.)
         Attempting to repair the memory hole.
+072393_ Cleaning up some of the dirt.
+
 *************************************/
 
+/*Hey FUCKHEAD.  This function here sucks shit!*/
 void UpdateView(byte view) {
   static byte oldview;
   char ts[90];
@@ -252,6 +255,9 @@ void DispGameModes2(int row, int mode, char *red, char *grn) {
   }
 }
 
+/*HEY! YOU! FUCKHEAD!  Everything after this line DEFINATLY has to
+  change!  It REALLY blows chunks.  Every freking line of code sucks!*/
+
 void SetupMonoGame(void) {
   char ts[80];
   int i, j, k, l;
@@ -374,6 +380,8 @@ void box2(int x, int y, int i, int j) {
   mono(0, y, i) = tr;
 }
 
+/*Gads, your mom lets you write code like that?*/
+
 void info(char *data) {
   int x, y;
   for (y = 12; y < 21; ++y)
@@ -404,46 +412,48 @@ void UpdateMonoIdle(byte rec1, byte rec2, byte track) {
 void PrintEtStatus(int x, int y, byte rec) {
   int i;
   char ts[40];
+  char *SSS;
+
   switch (rec) {
     case MAINMENU:
-      sprintf(ts, "MAIN MENU");
+      SSS = "MAIN MENU";
       break;
     case EDITMODE:
-      sprintf(ts, "EDIT GAME");
+      SSS = "EDIT GAME";
       break;
     case T_E_M:
-      sprintf(ts, "T/E/M MENU");
+      SSS = "T/E/M MENU";
       break;
     case S_E:
-      sprintf(ts, "S/E MENU");
+      SSS = "S/E MENU";
       break;
     case C_E_M:
-      sprintf(ts, "C/E/M MENU");
+      SSS = "C/E/M MENU";
       break;
     case REQXFER:
-      sprintf(ts, "REQUESTING XFER");
+      SSS = "REQUESTING XFER";
       break;
     case WAITGC:
-      sprintf(ts, "AWAITING GC START");
+      SSS = "AWAITING GC START";
       break;
     case START:
-      sprintf(ts, "AWAITING GAME START ACKN");
+      SSS = "AWAITING GAME START ACKN";
       break;
     case SENDRED:
     case SENDGRN:
-      sprintf(ts, "SENDING DATA");
+      SSS = "SENDING DATA";
       break;
     case 0xdd:
-      sprintf(ts, "INACTIVE");
+      SSS = "INACTIVE";
       break;
     default:
-      sprintf(ts, "???");
+      SSS = "???";
       break;
   }
   for (i = 51; i <= 78; ++i) {
     mono(0, x, i) = 32;
   }
-  PrintMono(x, y, ts);
+  PrintMono(x, y, SSS);
 }
 
 void UpdateSync(int y, int x, byte sync) {
@@ -462,6 +472,10 @@ void UpdateSync(int y, int x, byte sync) {
       break;
   }
 }
+
+/*Let's get some kind of really spiffy array in here.
+  Maybe even load a file in during init.
+*/
 
 void CheckPassport(char *pnum) {
   if ((strncmp(pnum, "0000110001", 10)) == 0)
@@ -492,4 +506,3 @@ void NewTrack(byte trackno) {
     settrack();              /*send ru(x) to effects*/
   }
 }
-

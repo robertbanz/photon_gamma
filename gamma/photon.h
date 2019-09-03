@@ -50,7 +50,6 @@ DCL byte idsig[44];    /*xref table id#->rom signatures*/
 DCL byte sigid[256];   /*xref table rom signatures->id#*/
 DCL struct podstruct pod[44]; /*pod performance data*/
 DCL char *buffer;             /*buffer to hold data computer information*/
-DCL void far *dcbuff;
 DCL struct dostime_t curtime; /*current time*/
 DCL struct dosdate_t curdate; /*current date*/
 DCL byte ctrl_e;              /*TRUE if prev. game was aborted*/
@@ -65,4 +64,6 @@ DCL char password[10];
 DCL byte gameslot;
 volatile DCL int timeremain;
 DCL byte poll_on;
-
+DCL byte ItsFake;
+DCL int PollNum;
+DCL byte noxfer;

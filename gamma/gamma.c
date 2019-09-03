@@ -1,5 +1,5 @@
 /********************/
-/*  GAMMA.C 		  */
+/*  GAMMA.C	    */
 /********************/
 /*#define DEBUG*/
 
@@ -49,6 +49,7 @@ main() {
   *************************************/
   poll_on = 0;
   sync = NSYNC;
+  ItsFake = 0;
   poll_val = 0x00;
   slot = 00;
   txval = 0x00;
@@ -82,7 +83,7 @@ main() {
   /*validate("gamma.exe",checksum);*/ /*validate executable file*/
 
   ControlBootScreen();
-
+  setupcga(BOOT);
   while (!kbhit())
     ;
 
@@ -103,10 +104,9 @@ main() {
   info("-Install INT24 handler");
   _harderr(hardhandler); /*kill abort, retry, fail messages*/
 
-  setupcga(BOOT); /*display boot screen*/
-  sync = NSYNC;   /*set sync to none*/
+  setupcga(BOOT);
+  sync = NSYNC; /*set sync to none*/
 
-  dcbuff = _fmalloc(2051); /*allocate data computer xfer buffer*/
   buffer = (char *)malloc(2051);
   /*GET CURRENT SYSTEM TIME AND DATE*/
   _dos_gettime(&curtime);
@@ -159,6 +159,67 @@ main() {
   ResetIBM(); /*Reset timer, close files, etc*/
   return (0);
 }
+struct gamerec rec;
+
+void LoadFakeGame(char *name) {
+  FILE *indata;
+  char *ts[80];
+  int i;
+  struct pc_playerinfo tempdata;
+  byte *data;
+  byte *dest;
+
+  indata = fopen(name, "rb");
+
+  if (indata == NULL) exit(-1);
+
+  fread(&rec, sizeof(struct gamerec), 1, indata);
+
+  memcpy(&game, &rec.game, sizeof(struct gamestruct));
+
+  for (i = 1; i < 41; ++i) {
+    memcpy(player[i].name, rec.player[i - 1].name, 10);
+    if (rec.player[i - 1].used) memcpy(player[i].passport, "0000000010", 10);
+  }
+
+  /*    memcpy(&RadioData[0], &rec.GameData[0], 360 * 40);*/
+
+  ItsFake = 1;
+
+  fclose(indata);
+}
+
+void InitGameData(void) {
+  int l;
+  /* Clear Out Player Records */
+  for (l = 0; l < 40; ++l) /*clear player records from prev. game*/
+  {
+    player[l].used = FALSE;
+    memset(player[l].passport, 32, 10);
+    memset(player[l].name, 32, 10);
+    player[l].score = 0;
+  }
+
+  /* 'reset' the game settings*/
+  game.mode1 = PUBLIC;
+  game.field = 1;
+  player[40].score = 0;
+  player[41].score = 0;
+  game.length = 360;
+
+  /* Reset the Team Names */
+  memset(game.redtm1, 32, 10);
+  memset(game.redtm2, 32, 10);
+  memset(game.grntm1, 32, 10);
+  memset(game.grntm2, 32, 10);
+
+  /*reset player count & down queue*/
+  red_down = 0;        /*clear down slots*/
+  players[RED][0] = 0; /*clear player records*/
+  players[RED][1] = 0;
+  players[GREEN][0] = 0;
+  players[GREEN][1] = 0;
+}
 
 byte handle_pregame(void) {
   int l, n;
@@ -169,36 +230,24 @@ byte handle_pregame(void) {
   byte Eta, Etb;
   byte recd, recd1;
   struct com_5 status;
+  int minute;
+  int two_count = 0;
+  char ts[80];
+
   tokn = TRUE;  /*tokn screen has not been displayed yet*/
   bye = FALSE;  /*default, not ctrl_q'd*/
   sync = PSYNC; /*set sync to PSYNC*/
   recd = 0;     /*init. receive character buffers*/
   recd1 = 0;
 
+  ItsFake = 0;
+
+  /* Reset PC */
   if (curconfig.pc == TRUE) charout(PC, 0xE7);
 
-  for (l = 0; l < 40; ++l) /*clear player records from prev. game*/
-  {
-    player[l].used = FALSE;
-    for (n = 0; n < 10; ++n) {
-      player[l].passport[n] = 32;
-      player[l].name[n] = 32;
-    }
-    player[l].score = 0;
-  }
+  InitGameData();
 
-  game.mode1 = PUBLIC;
-  game.field = 1;
-  player[40].score = 0;
-  player[41].score = 0;
-  game.length = 360;
-
-  for (n = 0; n < 10; ++n) {
-    game.redtm1[n] = 32;
-    game.redtm2[n] = 32;
-    game.grntm1[n] = 32;
-    game.grntm2[n] = 32;
-  }
+  /*Set where the status line is*/
 
   if (sent == TRUE) /*set status line to */
     stl = 24;       /*appropriate location*/
@@ -206,6 +255,7 @@ byte handle_pregame(void) {
     stl = 12;
   else if (game.field == 1)
     stl = 24;
+
 AfterReConfig: /*Re-entrance if a ctrl=r is done...*/
   if ((curconfig.et1 == RED) ||
       (curconfig.et2 == GREEN)) /*set Et's to their right places*/
@@ -229,9 +279,17 @@ AfterReConfig: /*Re-entrance if a ctrl=r is done...*/
     Etb = 0;
   if (curconfig.etfake == 1) Eta = 5;
   if (curconfig.etfake == 2) Etb = 5;
+
   if (Eta != 4) outp(ET1, ETPOLL); /*poll et's*/
   if (Etb != 4) outp(ET2, ETPOLL);
   EtStatus(*Et1, *Et2); /*display et status*/
+
+  if ((Eta >= 4) && (Etb >= 4)) {
+    LoadFakeGame("Fake.gme");
+  }
+
+  /*while(getch() != 'r');*/
+  Eta = 1;
 
   while (((Eta < 4) || (Etb < 4)) &
          (bye == FALSE)) /*if both haven't started or ctrl_q'd*/
@@ -239,6 +297,12 @@ AfterReConfig: /*Re-entrance if a ctrl=r is done...*/
     if (kbhit()) /*check keyboard*/
     {
       character = getch();
+      if (character == 'f') {
+        /*Fake Game Mode!*/
+        Eta = 5;
+        Etb = 5;
+        LoadFakeGame("Fake.gme");
+      }
       if (character == 17) /*ctrl_q option*/
         bye = TRUE;
       else if ((character == 'a') || (character == 'A')) {
@@ -334,12 +398,32 @@ AfterReConfig: /*Re-entrance if a ctrl=r is done...*/
     if (Eta == 4) recd = 0xdd;
     if (Etb == 4) recd1 = 0xdd;
     UpdateMonoIdle(recd, recd1, gametrack);
+    /* check to see if the time has change alot...if it has,
+       update the time on the screen*/
+    if (!noxfer) {
+      if (curtime.minute != minute) {
+        minute = curtime.minute;
+        vPage(0);
+        vChangeAttr(COLOR(BLK, WHT));
+        vPosCur(4, 22);
+        sprintf(ts, "%2d:%02d", (int)curtime.hour, (int)curtime.minute);
+        v_sends(ts);
+        if (two_count) {
+          two_count = 0;
+          PrintMessage(++tnum);
+        } else {
+          two_count = 1;
+        }
+      }
+      vPage(1);
+    }
   }
   if (bye == TRUE)
     return (TRUE);
   else
     return (FALSE);
 }
+
 byte PC_spcl(byte info) {
   switch (info) {
     case 0xE1:
@@ -358,33 +442,21 @@ byte PC_spcl(byte info) {
   }
 }
 
-void rungame(void) {
-  int bs, l, n;
-  int pl = 0;
-  int sbegin, send;
-  char tempst[40], ts[80];
-  char gotch;
-  byte view = 0;
-  byte cdf = FALSE;
-  byte pcs = FALSE;
-  info("GAME START Received"); /*acknowledge game start*/
-  red_down = 0;                /*clear down slots*/
-  players[RED][0] = 0;         /*clear player records*/
-  players[RED][1] = 0;
-  players[GREEN][0] = 0;
-  players[GREEN][1] = 0;
-  for (l = 0; l < 65; ++l) npoll[l] = 0;
-  if (game.mode1 == PUBLIC) /*find beginning score for field A*/
-    bs = curconfig.pub_begin;
+void SetupPlayerData(void) {
+  int bs, l;
+
+  if (game.mode1 == PUBLIC) bs = curconfig.pub_begin;
   if (game.mode1 == FREEFORALL) bs = curconfig.ffa_begin;
   if (game.mode1 == LEAGUE) bs = curconfig.lea_begin;
+
   beginscore = bs;
   player[41].used = TRUE; /*initialize test slots*/
   player[42].used = TRUE;
   player[41].score = bs;
   player[42].score = bs;
-  vPage(0);
+
   for (l = 0; l < 40; ++l) rankplayer[l] = NULL;
+
   if (game.field == 1) /*fill game for one field*/
   {
     for (l = 0; l < 20; ++l) /*remember*/
@@ -487,28 +559,120 @@ void rungame(void) {
       }
     }
   }
-  if (game.field == 1) /*set location for status line*/
-    stl = 24;
+}
+
+byte game_dokeyboard(void) {
+  char gotch;
+  static int pl;
+  static byte view = 0;
+  if (kbhit()) {
+    gotch = getch();
+    pl = 10;
+    /*if (gotch == password[0])
+            pl = 1;
+    else if (password[pl] == gotch)
+            if (pl < 10) ++pl;*/
+    switch (gotch) {
+      case 'l':
+      case 'L':
+        charout(DC, 0xE9);
+        break;
+      case 'a':
+      case 'A':
+        charout(DC, 0xF8);
+        break;
+      case 5: /*CTRL-E !*/
+        timeremain = 1;
+        ctrl_e = TRUE;
+        break;
+      case 'r': /*RADIO VIEW*/
+        if (pl >= 10) view = 2;
+        break;
+      case 'n':
+        view = 0;
+        break;
+      case 'p':
+        view = 1;
+        break;
+      case 'P':
+        view = 6;
+        break;
+      case 's':
+        view = 3;
+        break;
+      case 'c':
+        view = 5;
+        break;
+    }
+  }
+  return (view);
+}
+void rungame(void) {
+  int bs, l, n;
+  int sbegin, send;
+  char tempst[40], ts[80];
+  byte view;
+  byte cdf = FALSE;
+  byte pcs = FALSE;
+
+  /*Tell them we're here!*/
+  info("GAME START Received");
+
+  SetupPlayerData();
+
+  /*reset counter*/
+  PollNum = 0;
+
+  vPage(0);
+
+  /*clear out poll array*/
+  for (l = 0; l < 65; ++l) npoll[l] = 0;
+
+  /*setup location of status line for two field operation*/
+  /*...only counts when we're in fuckedup mode, really*/
+  if (game.field == 1) stl = 24;
   if (game.field == 2) stl = 12;
-  setupcga(ALRTSCRN); /*display blinking alert*/
-  poll_flag = FALSE;  /*sync poll() for timing*/
+
+  /*notify lobby of impending game start*/
+  setupcga(ALRTSCRN);
+
+  /*syncronize watches!*/
+  poll_flag = FALSE;
   while (poll_flag == FALSE)
     ;
-  timeremain = 29; /*28 seconds...*/
+
+  /*set the timer and start it counting down.*/
+  timeremain = 29;
   TCEnable = TRUE;
-  info("Sent start to EFFECTS"); /*start effects computer*/
+
+  /*send start signal to effects computer*/
+  info("Sent start to EFFECTS");
   effectsout("\r", 1);
-  sync = PSYNC; /*sync better be PSYNC*/
+
+  /*make SURE the sync is in PSYNC mode*/
+  sync = PSYNC;
+
+  /*Tell PC to expect data*/
   if (curconfig.pc == TRUE) charout(PC, 0xE2);
+
+  /*The PRE-GAME countdown has started!*/
   while (timeremain > 0) {
-    if (poll_flag == TRUE) /*Every poll...*/
-    {
+    if (poll_flag == TRUE) {
       poll_flag = FALSE;
-      vChangeAttr(COLOR(BLK, WHT));
+
+      /*print COUNTDOWN on status line*/
       vPage(0);
-      sprintf(ts, "%2d", timeremain);
-      vStatLine(ts, 34, COLOR(HWHT, BLU), 0);
+      vChangeAttr(COLOR(CRED, BLK));
+      Dig_Digit((int)(timeremain / 10), 15, 4);
+      Dig_Digit((int)(timeremain % 10), 23, 4);
+
+      /*sprintf(ts,"%2d",timeremain);
+      vStatLine(ts,34,COLOR(HWHT,BLU),0);
+      */
+
       vPage(1);
+
+      /*send data to the PC*/
       if ((timeremain <= 25) && (pcs == FALSE) && (curconfig.pc == TRUE)) {
         info("Sending data to PC");
         for (l = 0; l < 40; ++l) {
@@ -517,28 +681,38 @@ void rungame(void) {
         }
         pcs = TRUE;
       }
-      if ((timeremain <= 19) && (cdf == FALSE)) /*time to start cd*/
-      {
+
+      /*START CD player*/
+      if ((timeremain <= 19) && (cdf == FALSE)) {
         cdf = TRUE;
-        CD_pause(); /*unpause CD*/
+        CD_pause();
         info("Sent start to CD");
-        if (curconfig.pc == TRUE) charout(PC, 0xE3); /*Time to start pc*/
+
+        /*make sure PC is ready!*/
+        if (curconfig.pc == TRUE) charout(PC, 0xE3);
       }
     }
   }
+
+  /*CLEAR ET'S for the next game*/
   if (curconfig.et1 != 0) /*Let the ET's go...*/
     outp(ET1, STARTACKN);
   if (curconfig.et2 != 0) outp(ET2, STARTACKN);
-  clrcga();
+
+  /*setup monitor screen to game mode*/
+  SetupMonoGame();
+
+  /*make pods think the game has started and begin to process data*/
   sync = GSYNC; /*it's GSYNC TIME!*/
   poll_on = 1;
-  SetupMonoGame(); /*setup monitor for game*/
+  timeremain = game.length;
+
+  /*Set lobby screen to game mode*/
+
   if (game.field == 1) {
     setupcga(GAME1); /*single field game*/
     stl = 24;        /*set status line*/
-  }
-
-  else {
+  } else {
     setupcga(GAME2); /*dual field game*/
     stl = 12;        /*set status line*/
     vPage(0);
@@ -552,18 +726,18 @@ void rungame(void) {
     v_printf("%10s", game.grntm2);
     vPage(1);
   }
-  timeremain = game.length;           /*set game length*/
-  sprintf(tempst, "%4d", timeremain); /*print time remaining*/
-  vPage(0);
-  vStatLine(tempst, 35, COLOR(HWHT, BLU), 0);
-  vPage(1);
-  UpdateSync(7, 21, sync); /*display sync set on monitor*/
+
+  UpdateSync(7, 21, sync);
   UpdateView(0);
+
+  /*this here is THE game...*/
+
   for (; timeremain > -3;) {
-    if (poll_flag == TRUE) /*every poll...*/
-    {
+    if (poll_flag == TRUE) {
       poll_flag = FALSE;
       sbegin = slot;
+      PollNum++;
+
       if (timeremain <= 0) {
         sync = ESYNC;
         UpdateSync(7, 21, sync);
@@ -571,48 +745,11 @@ void rungame(void) {
         vStatLine("<<<  TERMINATED  >>> ", 18, COLOR(HWHT, HBLU), 0);
         vPage(1);
       }
+
+      /* tell the PC to start expecting a poll*/
       if (curconfig.pc == TRUE) outp(PC, 0xE4);
-      if (kbhit()) /*check keyboard*/
-      {
-        gotch = getch();
-        pl = 10;
-        /*if (gotch == password[0])
-                pl = 1;
-        else if (password[pl] == gotch)
-                if (pl < 10) ++pl;*/
-        switch (gotch) {
-          case 'l':
-          case 'L':
-            charout(DC, 0xE9);
-            break;
-          case 'a':
-          case 'A':
-            charout(DC, 0xF8);
-            break;
-          case 5: /*CTRL-E !*/
-            timeremain = 1;
-            ctrl_e = TRUE;
-            break;
-          case 'r': /*RADIO VIEW*/
-            if (pl >= 10) view = 2;
-            break;
-          case 'n': /*NO VIEW*/
-            view = 0;
-            break;
-          case 'p': /*REAL TIME POD PERFORMANCE*/ /*RED TEAM*/
-            view = 1;
-            break;
-          case 'P': /*REAL TIME POD PERFORMANCE*/ /*GRN TEAM*/
-            view = 6;
-            break;
-          case 's': /*VIEW OF SCORES AND CODENAMES*/
-            view = 3;
-            break;
-          case 'c': /*VIEW OF PASSPORTS BY SLOT*/
-            view = 5;
-            break;
-        }
-      }
+
+      /* download data to the PC*/
       if (curconfig.pc == TRUE) {
         for (l = 5; l < 25; ++l) {
           if ((npoll[l] != 0x00) && (npoll[l] < 0xE0))
@@ -630,24 +767,34 @@ void rungame(void) {
           else
             charout(PC, 0x10);
         }
+        charout(PC, 0xE5);
       }
-      charout(PC, 0xE5);
-      for (l = 1; l < 41; ++l) /*check pods for resets*/
+
+      view = game_dokeyboard();
+
+      /*mark reset pods*/
+      for (l = 1; l < 41; ++l)
         if (pod[l].missinrow > 30) pod[l].resetflag = '*';
-      /*update view used to be here!!*/
-      sprintf(tempst, "%4d", timeremain); /*print time remaining*/
+
+      /*print the time remaining on both screens*/
+      sprintf(tempst, "%2d:%02d", (int)(timeremain / 60),
+              (int)(timeremain % 60));
       if (timeremain > 0) {
         vPage(0);
-        vStatLine(tempst, 35, COLOR(HWHT, BLU), 0);
+        vStatLine(tempst, 34, COLOR(HWHT, BLU), 0);
         vPage(1);
       }
       PrintMono(6, 21, tempst);
-      doscores();                               /*sort & display scores*/
-      sprintf(tempst, "%5d", player[41].score); /*display test slot's scores*/
+
+      /*update the scores on the on the lobby screen*/
+      doscores();
+
+      /*update the test slot score on the tech-screen*/
+      sprintf(tempst, "%5d", player[41].score);
       PrintMono(5, 41, tempst);
       sprintf(tempst, "%5d", player[42].score);
       PrintMono(6, 41, tempst);
-      send = slot; /*make note of ending slot*/
+      send = slot;
       sprintf(tempst, "%2d-%02d-%02d      %2d:%02d:%02d", curdate.month,
               curdate.day, curdate.year, curtime.hour, curtime.minute,
               curtime.second);
@@ -655,32 +802,40 @@ void rungame(void) {
       vPage(0);
       vChangeAttr(COLOR(HWHT, BLU));
       vPosCur(18, 23);
-      v_printf("   %2d:%02d - %2d-%02d-%04d ", curtime.hour, curtime.minute,
-               curdate.month, curdate.day, curdate.year);
+      /*v_printf("   %2d:%02d - %2d-%02d-%04d ", curtime.hour, curtime.minute,
+       * curdate.month, curdate.day, curdate.year);*/
       vPage(1);
-      sprintf(tempst, "BS:%3d ES:%3d RB:%d", sbegin, send,
-              badradio); /*print beginning/ending slots*/
+      sprintf(tempst, "BS:%3d ES:%3d RB:%d", sbegin, send, badradio);
       PrintMono(10, 1, tempst);
-      UpdateView(view); /*update 'view' screen*/
+      UpdateView(view);
     }
   }
-  view = 0;     /*clear view*/
-  sync = ESYNC; /*reset pods*/
+
+  /*end of the game...clean up*/
+  view = 0;
+  sync = ESYNC;
   poll_on = 0;
+
   if ((curconfig.pc == TRUE) && (curconfig.pcmode >= 1))
     if (((game.mode1 == LEAGUE) || (game.mode2 == LEAGUE)) ||
         (curconfig.pcmode == 2)) {
       info("ENQ");
       charout(PC, 0xE6); /*Enquire tournament mode?*/
     }
-  UpdateSync(7, 21, sync); /*update sync*/
+
+  UpdateSync(7, 21, sync);
+
   vPage(0);
   vStatLine("<<<  TERMINATED  >>> ", 18, COLOR(HWHT, HBLU), 0);
   vPage(1);
-  doscores();      /*redisplay scores (one last time*/
-  timeremain = 17; /*18 secs of esync*/
 
-  WaitPoll();
+  /*final score update*/
+  doscores();
+
+  /*ESYNC time*/
+  timeremain = 17;
+
+  /*download score data to PC (if it want's it)*/
   if ((curconfig.pc == TRUE) && (curconfig.pcmode >= 1))
     if (((game.mode1 == LEAGUE) || (game.mode2 == LEAGUE)) ||
         (curconfig.pcmode == 2)) {
@@ -694,12 +849,20 @@ void rungame(void) {
       info("Data Done!");
       charout(PC, 0xE9);
     }
+
   for (; timeremain > 0;) {
-  }           /*timer count code for e-sync*/
-  CD_pause(); /*pause CD player*/
+  }
+  /*stop the CD*/
+
+  CD_pause();
+
+  /*make the PC go to sleep*/
   if (curconfig.pc == TRUE) charout(PC, 0xE7);
+
+  /*stop the time from counting down*/
   TCEnable = FALSE;
-  sync = NSYNC;  /*stop sync*/
+  sync = NSYNC; /*stop sync*/
+
   ++game.number; /*increment game #*/
   vPage(1);
 }
@@ -735,25 +898,36 @@ void interrupt far poll() {
   } else if (poll_on == 1) {
     if ((slot > 2) && (slot < 25)) {
       keydown();
-      ReadPort(RADIO + 5, &poll_c5);
-      if (poll_c5.DR == 1) {
-        poll_val = inp(RADIO);
-        if (slot > 4) {
-          if (poll_val == 0x39) ++badradio;
+      if ((ItsFake) && (slot > 4)) {
+        if ((rec.GameData[PollNum][slot - 5] != 0x00) &&
+            (rec.GameData[PollNum][slot - 5] != 0xee)) {
+          poll_val = rec.GameData[PollNum][slot - 5];
           npoll[slot] = poll_val;
           if (player[slot - 4].used) processpoll(slot - 4, poll_val, RED);
-        } else if (slot <= 4) {
-          processpoll(slot + 38, poll_val, TEST);
+        } else {
+          npoll[slot] = 0;
         }
       } else {
-        npoll[slot] = 00;
-        if (player[slot - 4].used == TRUE) {
-          ++pod[slot - 4].txmiss;
-          ++pod[slot - 4].missinrow;
+        ReadPort(RADIO + 5, &poll_c5);
+        if (poll_c5.DR == 1) {
+          poll_val = inp(RADIO);
+          if (slot > 4) {
+            if (poll_val == 0x39) ++badradio;
+            npoll[slot] = poll_val;
+            if (player[slot - 4].used) processpoll(slot - 4, poll_val, RED);
+          } else if (slot <= 4) {
+            processpoll(slot + 38, poll_val, TEST);
+          }
+        } else {
+          npoll[slot] = 00;
+          if (player[slot - 4].used == TRUE) {
+            ++pod[slot - 4].txmiss;
+            ++pod[slot - 4].missinrow;
+          }
         }
       }
     }
-    if ((slot > 24) & (slot < 30)) {
+    if ((slot > 24) && (slot < 30)) {
       if (red_down > 0) {
         txval = putdown(RED);
         outp(RADIO, txval);
@@ -762,20 +936,30 @@ void interrupt far poll() {
         npoll[slot] = 0;
     } else if (slot == 30)
       npoll[slot] = inp(RADIO);
-    else if ((slot > 30) & (slot < 51)) {
-      if (inp(RADIO + 2) == 4) {
-        poll_val = inp(RADIO);
-
-        npoll[slot] = poll_val;
-        if (player[slot - 10].used) processpoll(slot - 10, poll_val, GREEN);
+    else if ((slot > 30) && (slot < 51)) {
+      if (ItsFake) {
+        if ((rec.GameData[PollNum][slot - 11] != 0x00) &&
+            (rec.GameData[PollNum][slot - 5] != 0xee)) {
+          poll_val = rec.GameData[PollNum][slot - 11];
+          npoll[slot] = poll_val;
+          if (player[slot - 10].used) processpoll(slot - 10, poll_val, GREEN);
+        } else {
+          npoll[slot] = 0;
+        }
       } else {
-        npoll[slot] = 00;
-        if (player[slot - 10].used == TRUE) {
-          ++pod[slot - 10].txmiss;
-          ++pod[slot - 10].missinrow;
+        if (inp(RADIO + 2) == 4) {
+          poll_val = inp(RADIO);
+          npoll[slot] = poll_val;
+          if (player[slot - 10].used) processpoll(slot - 10, poll_val, GREEN);
+        } else {
+          npoll[slot] = 00;
+          if (player[slot - 10].used == TRUE) {
+            ++pod[slot - 10].txmiss;
+            ++pod[slot - 10].missinrow;
+          }
         }
       }
-    } else if ((slot > 54) & (slot < 60)) {
+    } else if ((slot > 54) && (slot < 60)) {
       if (red_down > 0) {
         txval = putdown(RED);
         outp(RADIO, txval);
@@ -964,21 +1148,16 @@ void processpoll_f(void) /*Function for processpoll*/
 
 byte putdown(byte color) {
   pd_j = down[1];
-  /*if (red_down > 30)
-           red_down = 30;*/
+  if (red_down >= 30) red_down = 29;
   for (pd_k = red_down; pd_k > 1; --pd_k) down[pd_k - 1] = (down[pd_k]);
   --red_down;
   return (pd_j);
 }
 
-void doscores(void) {
-  int tsr, tsg, thitsr, tgethitr, thitownr, thitsg, tgethitg, thitowng;
+void SortScores() {
   volatile struct playertype *temp;
-  int j, k, i;
-  vPage(0);
-  /*Sort the score pointers*/
-  /*For ONE field*/
-  tsr = tsg = thitsr = tgethitr = thitownr = thitsg = tgethitg = thitowng = 0;
+  int k, j, i;
+
   if (game.field == 1) {
     for (i = 1; i < players[RED][0]; ++i) {
       k = i;
@@ -1032,123 +1211,18 @@ void doscores(void) {
       rankplayer[k] = temp;
     }
   }
-  /*Display the scores*/
-  /*For BETA setup*/
-  tsr = 0;
-  tsg = 0;
+}
+
+void doscores(void) {
+  SortScores();
+
   if (game.field == 1) {
     if ((curconfig.newscr > 1) ||
-        ((curconfig.newscr == 1) && (game.mode1 != PUBLIC))) {
-      /*****TOTALLY COOL SCREEN MODE****/
-      for (i = 1; i <= players[RED][0]; ++i) {
-        if ((i == 1) && ((rankplayer[21] == NULL) ||
-                         (rankplayer[1]->score > rankplayer[21]->score)))
-          vChangeAttr(COLOR(CRED, HBLK));
-        else
-          vChangeAttr(COLOR(CRED, BLK));
-
-        vPosCur(0, (byte)(i + 1));
-        v_printf("%s%-10s", rankplayer[i]->baseflag ? "*" : " ",
-                 rankplayer[i]->name);
-        vChangeAttr(COLOR(CRED, BLK));
-        vPosCur(18, (byte)(i + 1));
-        v_printf("%4d %4d %4d %6d", rankplayer[i]->hits, rankplayer[i]->gethit,
-                 rankplayer[i]->hitown, rankplayer[i]->score);
-        thitsr += rankplayer[i]->hits;
-        tgethitr += rankplayer[i]->gethit;
-        thitownr += rankplayer[i]->hitown;
-        tsr += rankplayer[i]->score;
-      }
-      for (i = 1; i <= players[GREEN][0]; ++i) {
-        /***grn player scores, etc.***/ /**remember, the guy might be flashing*/
-        if ((i == 1) && ((rankplayer[1] == NULL) ||
-                         (rankplayer[1]->score < rankplayer[21]->score)))
-          vChangeAttr(COLOR(GRN, HBLK));
-        else
-          vChangeAttr(COLOR(GRN, BLK));
-
-        vPosCur(0, (byte)(i + 12));
-        v_printf("%s%-10s", rankplayer[i + 20]->baseflag ? "*" : " ",
-                 rankplayer[i + 20]->name);
-        vChangeAttr(COLOR(GRN, BLK));
-        vPosCur(18, (byte)(i + 12));
-        v_printf("%4d %4d %4d %6d", rankplayer[i + 20]->hits,
-                 rankplayer[i + 20]->gethit, rankplayer[i + 20]->hitown,
-                 rankplayer[i + 20]->score);
-        thitsg += rankplayer[i + 20]->hits;
-        tgethitg += rankplayer[i + 20]->gethit;
-        thitowng += rankplayer[i + 20]->hitown;
-        tsg += rankplayer[i + 20]->score;
-      }
-      vChangeAttr(COLOR(HWHT, CRED));
-      vPosCur(18, 1);
-      v_printf("%4d %4d %4d ", thitsr, tgethitr, thitownr);
-      vPosCur(33, 1);
-      if (tsr > tsg) vChangeAttr(COLOR(HWHT, HRED));
-      v_printf("%6d", tsr);
-      vChangeAttr(COLOR(HWHT, GRN));
-      vPosCur(18, 12);
-      v_printf("%4d %4d %4d ", thitsg, tgethitg, thitowng);
-      if (tsg > tsr) vChangeAttr(COLOR(HWHT, HGRN));
-      vPosCur(33, 12);
-      v_printf("%6d", tsg);
-    } else {
-      for (i = 1; i <= players[RED][0]; ++i) {
-        if ((i == 1) && (rankplayer[1]->score > rankplayer[21]->score))
-          vChangeAttr(COLOR(CRED, HBLK));
-        else
-          vChangeAttr(COLOR(CRED, BLK));
-
-        vPosCur(2, (byte)(i + 1));
-        v_printf("%s %-10s", rankplayer[i]->baseflag ? "*" : " ",
-                 rankplayer[i]->name);
-        vChangeAttr(COLOR(CRED, BLK));
-        vPosCur(24, (byte)(i + 1));
-        v_printf("%5d   %6d", rankplayer[i]->hits, rankplayer[i]->score);
-        thitsr += rankplayer[i]->hits;
-        tgethitr += rankplayer[i]->gethit;
-        thitownr += rankplayer[i]->hitown;
-        tsr += rankplayer[i]->score;
-      }
-      for (i = 1; i <= players[GREEN][0]; ++i) {
-        /***grn player scores, etc.***/ /**remember, the guy might be flashing*/
-        if ((i == 1) && (rankplayer[1]->score < rankplayer[21]->score))
-          vChangeAttr(COLOR(GRN, HBLK));
-        else
-          vChangeAttr(COLOR(GRN, BLK));
-
-        vPosCur(2, (byte)(i + 12));
-        v_printf("%s %-10s", rankplayer[i + 20]->baseflag ? "*" : " ",
-                 rankplayer[i + 20]->name);
-        vChangeAttr(COLOR(GRN, BLK));
-        vPosCur(24, (byte)(i + 12));
-        v_printf("%5d   %6d", rankplayer[i + 20]->hits,
-                 rankplayer[i + 20]->score);
-        thitsg += rankplayer[i + 20]->hits;
-        tgethitg += rankplayer[i + 20]->gethit;
-        thitowng += rankplayer[i + 20]->hitown;
-        tsg += rankplayer[i + 20]->score;
-      }
-      vChangeAttr(COLOR(HWHT, CRED));
-      vPosCur(24, 1);
-      v_printf("%5d", thitsr);
-      vPosCur(32, 1);
-      if (tsr > tsg) vChangeAttr(COLOR(HWHT, HRED));
-      v_printf("%6d", tsr);
-      vChangeAttr(COLOR(HWHT, GRN));
-      vPosCur(24, 12);
-      v_printf("%5d", thitsg);
-      if (tsg > tsr) vChangeAttr(COLOR(HWHT, HGRN));
-      vPosCur(32, 12);
-      v_printf("%6d", tsg);
-    }
+        ((curconfig.newscr == 1) && (game.mode1 != PUBLIC)))
+      LOBBY_game1_update(1);
+    else
+      LOBBY_game1_update(0);
   }
-
-  /*For ALPHA/OMEGA setup*/
-  if (game.field == 2) {
-    /*omar*/
-  }
-  vPage(1);
 }
 
 void SendToDC(void) {
@@ -1202,8 +1276,7 @@ void SendToDC(void) {
 }
 
 #pragma optimize("", off)
-void WaitAPoll(void) /*Waits 10 slots...or whatever is after the %*/
-{
+void WaitAPoll(void) {
   while (slot % 10 == 0)
     ;
   while (slot % 10 != 0)
@@ -1474,26 +1547,6 @@ void WriteGmData(void) {
     info("! ERROR WRITING GMDATA");
 }
 
-void validate(char *filename, unsigned int checksum) {
-  FILE *fp;
-  unsigned int newsum = 0;
-  unsigned char info;
-  if ((fp = fopen(filename, "rb")) == NULL) {
-    printf("FAIL ON VALIDATE ERROR#01");
-    exit(1);
-  } else {
-    while (!eof(fp)) {
-      fread(&info, 1, 1, fp);
-      newsum = (newsum + info) % 65535;
-    }
-    fclose(fp);
-  }
-  if (newsum != checksum) {
-    printf("FAIL ON VALIDATE ERROR#02");
-    exit(2);
-  }
-  printf("ok\n");
-}
 #pragma optimize("", off)
 byte WaitAck(int prt, int count) {
   int x;
@@ -1613,8 +1666,11 @@ void MainLoop() {
       {
         clrcga();
         setupcga(TWEENTEXT);
-      } else
+        noxfer = 0;
+      } else {
         setupcga(NOXFER);
+        noxfer = 1;
+      }
     }
   } while (quit == FALSE);
 }
