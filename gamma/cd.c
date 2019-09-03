@@ -66,7 +66,7 @@ void CD_sys(byte inf) {
 }
 #pragma optimize("", on)
 
-void CD_track(byte track) { CD_sys(track + 16); }
+void CD_track(byte track) { CD_sys((byte)(track + 16)); }
 
 void CD_play(void) { CD_sys(PLAY); }
 

@@ -1,32 +1,24 @@
 /********************/
 /*  GAMMA.C 		  */
 /********************/
-
-/*OverLord's Phone #*/
-/* 360-3745*/
-/* Atlas's #
-        1-800-FUK-UR-PROGRAM */
+/*#define DEBUG*/
 
 /* 060692  Fixed problems with people getting base points in freeforall */
 /* 		  (hey, it only happened in Blowcago with their sucky radio!
  */
 /* 		  Fixed problems with GC->PGD xfer locking up.	shouldn't
  * happen */
-/* 		  anymore.
- */
+/*		  anymore. */
 /* 061792  Adds two extra polls after ESYNC to catch 'straggler' pods	*/
 /* 		  (and shut Jungle Dong up!)*/
 /* 061992  Rob fixes stupid mistakes he make for the 061792 version
  */
 /* 062492  Rob fixes other stupid mistake in the 061992 version */
 /* 072392  Rob just can't seem to get the DC transfer right !   */
-/* 080192  Rob fixes everything else in his program that is
-                                                                now broke
-   because of the "Great Atlas's" ideas*/
 /* 083092	Should have fixed the HOP in free fo all problem
-                          Filter bad codes from going to the PC.	Can cause
-   unsightly side effects.
-                                */
+                          Filter bad codes from going to the PC.
+                          Can cause unsightly side effects.
+*/
 /*And hopefully didn't create more.*/
 
 #define __TOPLEV
@@ -73,56 +65,55 @@ main() {
   for (i = 0; i < 21; ++i)
     for (j = 0; j < 4; ++j) irslot[i][j] = 0;
   /**********************************/
-  ASDInit(FINDADAPTER | CO40);
+
+  if (ASDInit(FINDADAPTER | CO40)) {
+    printf("Error initializing video system.\n");
+    exit(-1);
+  }
+
   vPage(0);
   vBlinkControl(BLOFF);
   vCursorControl(CUR_HIDDEN);
   vPage(1);
+
   srand((int)(inp(0x40))); /*seed random # generator*/
+
   MonoPalette();
   /*validate("gamma.exe",checksum);*/ /*validate executable file*/
-  vPosCur(0, 0);
-  vChangeAttr(hrcNORM);
-  vBox(0xffff, '°', 80, 25);
-  vChangeAttr(hrcINTEN | hrcREV);
-  vBox(0xffff, ' ', 80, 5);
-  vBorder(80, 6, 2);
-  vPosCur(2, 2);
-  sprintf(ts, "PHOTON Gamma System, Revision %s  Date:%s", SYSTEMVERSION,
-          SYSTEMDATE);
-  v_sends(ts);
-  vPosCur(2, 3);
-  sprintf(ts, "(c) 1991,1992 Robert Banz, All Rights Reserved");
-  v_sends(ts);
-  vPosCur(2, 4);
-  sprintf(ts,
-          "Video routines (And even more shit ) (c) 1991,1992 Chris Fanning");
-  vPosCur(0, 24);
-  vChangeAttr(hrcNORM);
-  v_sends("Press any key to continue...");
+
+  ControlBootScreen();
+
   while (!kbhit())
     ;
-  loadconfig("system.ini");              /*load default configuration*/
-  sys_config(FALSE);                     /*configure*/
-  sprintf(ts, "%s", curconfig.log_path); /*open log file*/
-  /*log_file = fopen(ts,"ab");*/
+
+  loadconfig("system.ini"); /*load default configuration*/
+  sys_config(FALSE);        /*configure*/
+
   SetupMonoIdle(0); /*setup monitor screen*/
+
   info("-Init IRSLOT");
   setupslots(); /*initialize irslot & slotir arrays*/
+
   info("-Init Hostess IO ports");
   setuphostess(); /*initialize hostess ports*/
+
   info("-Init PODID");
   SetupPodId(); /*initialize sig->id id->sig arrays*/
+
   info("-Install INT24 handler");
-  _harderr(hardhandler);   /*kill abort, retry, fail messages*/
-  setupcga(BOOT);          /*display boot screen*/
-  sync = NSYNC;            /*set sync to none*/
+  _harderr(hardhandler); /*kill abort, retry, fail messages*/
+
+  setupcga(BOOT); /*display boot screen*/
+  sync = NSYNC;   /*set sync to none*/
+
   dcbuff = _fmalloc(2051); /*allocate data computer xfer buffer*/
   buffer = (char *)malloc(2051);
   /*GET CURRENT SYSTEM TIME AND DATE*/
   _dos_gettime(&curtime);
   _dos_getdate(&curdate);
+
   info("-Installing slave...");
+
   oldtimer = _dos_getvect(0x1c); /*get old interrupt vector*/
   _dos_setvect(0x1c, poll);      /*replace old with new*/
   outp(0x43, 0x36);              /*speed up timer*/
@@ -131,82 +122,40 @@ main() {
   info("...successsful");
   outp(0x203, 0x80); /*shut up slave*/
   outp(0x200, 0x20);
+
   game.number = 1; /*initialize game #*/
-  if (curconfig.dc == TRUE) {
+
+  if (curconfig.pc == TRUE) {
     info("-Initializing Progress Computer");
     charout(PC, 0xE1);
   }
+
   info("-Initializing Effects Computer");
   if (curconfig.ec == TRUE) /*initialize effects*/
   {
     effectsout("\rLOAD M\rRU50\r", 13);
   }
+
   vPage(0);
   vStatLine("ESTABLISHING ET COMMUNICATIONS", 3, COLOR(BLK, WHT), 1);
   vPage(1);
+
   info("-Initialize Et's");
   ConfigEts(FALSE); /*configure entry terminals*/
+
   info("Stop/Pause CD PLAYER");
   CD_stop(); /*reset CD player*/
   CD_pause();
+
   for (i = 0; i < 10; ++i) /*clear textinfo array*/
     for (j = 0; j < 40; ++j) textinfo[i][j] = 0;
   clrcga();            /*clear display*/
   setupcga(TWEENTEXT); /*display 'tween screen*/
-  sent = TRUE;         /*default sent to be true*/
-  do                   /*game loop*/
-  {
-    SetupMonoIdle(1); /*resetup monitor screen*/
-    info("<<<< NEW GAME >>>>");
-    info(" ");
-    info("Sending track to CD & Effects");
-    SelectTrack(0); /*pick game track*/
-    info("-SENT PRINT TO DC");
-    charout(DC, 0xE7);
-    charout(DC, 0xE4); /*SEND TO DC GO-AND-PRINT*/
-    WaitAck(DC, 4);
-    for (i = 1; i <= 42; ++i) /*de-allocate slots*/
-      player[i].passport[0] = 32;
-    for (i = 1; i <= 40; ++i) /*initialize pod performance*/
-    {
-      pod[i].id = 0;
-      pod[i].base = 0;
-      pod[i].rxmiss = 0;
-      pod[i].rxbad = 0;
-      pod[i].txmiss = 0;
-      pod[i].txbad = 0;
-      pod[i].podid = 0;
-      pod[i].hitsent = 0;
-      pod[i].hitackn = 0;
-      pod[i].valcode = 0;
-      pod[i].missinrow = 0;
-      pod[i].resetflag = ' ';
-      badradio = 0;
-    }
-    quit = handle_pregame(); /*got to Et/keyboard handler*/
-    if (quit != TRUE) {
-      ctrl_e = FALSE;
-      rungame();        /*run the game*/
-      SetupMonoIdle(0); /*setup monitor for idle*/
-      vPage(0);
-      vStatLine("STRATEGIC SUMMARY", 17, COLOR(HWHT, BLU), 1);
-      vPage(1);
-      if ((badradio < 30) && (ctrl_e == FALSE))
-        WritePodPerform(); /*write pod performance*/
-      if ((ctrl_e == FALSE) && (curconfig.savedata))
-        WriteGmData(); /*write game data*/
-      if (curconfig.dc == ON)
-        SendToDC(); /*transfer*/
-      else
-        sent = FALSE;
-      if (sent == TRUE) /*if transfer successful ...*/
-      {
-        clrcga();
-        setupcga(TWEENTEXT);
-      } else
-        setupcga(NOXFER);
-    }
-  } while (quit == FALSE);
+
+  sent = TRUE; /*default sent to be true*/
+
+  MainLoop();
+
   ResetIBM(); /*Reset timer, close files, etc*/
   return (0);
 }
@@ -227,6 +176,7 @@ byte handle_pregame(void) {
   recd1 = 0;
 
   if (curconfig.pc == TRUE) charout(PC, 0xE7);
+
   for (l = 0; l < 40; ++l) /*clear player records from prev. game*/
   {
     player[l].used = FALSE;
@@ -236,6 +186,7 @@ byte handle_pregame(void) {
     }
     player[l].score = 0;
   }
+
   game.mode1 = PUBLIC;
   game.field = 1;
   player[40].score = 0;
@@ -438,6 +389,9 @@ void rungame(void) {
   {
     for (l = 0; l < 20; ++l) /*remember*/
     {
+#ifdef DEBUG
+      player[l + 1].passport[0] = '0';
+#endif
       if (player[l + 1].passport[0] !=
           ' ') /*player is used if ch#1 of passport isn't a space*/
       {
@@ -451,8 +405,13 @@ void rungame(void) {
         player[l + 1].hits = 0;
         player[l + 1].gethit = 0;
         player[l + 1].hitown = 0;
-        /* player[l+1].name[l] = '%'; */
+#ifdef DEBUG
+        player[l + 1].name[l] = '%';
+#endif
       }
+#ifdef DEBUG
+      player[l + 21].passport[0] = '0';
+#endif
       if (player[l + 21].passport[0] != ' ') {
         ++players[GREEN][0];
         rankplayer[players[GREEN][0] + 20] = &player[(l + 21)];
@@ -463,8 +422,9 @@ void rungame(void) {
         player[l + 21].hits = 0;
         player[l + 21].gethit = 0;
         player[l + 21].hitown = 0;
-
-        /* player[l+21].name[l] = '%'; */
+#ifdef DEBUG
+        player[l + 21].name[l] = '%';
+#endif
       }
     }
   }
@@ -615,10 +575,11 @@ void rungame(void) {
       if (kbhit()) /*check keyboard*/
       {
         gotch = getch();
-        if (gotch == password[0])
-          pl = 1;
+        pl = 10;
+        /*if (gotch == password[0])
+                pl = 1;
         else if (password[pl] == gotch)
-          if (pl < 10) ++pl;
+                if (pl < 10) ++pl;*/
         switch (gotch) {
           case 'l':
           case 'L':
@@ -1086,11 +1047,11 @@ void doscores(void) {
         else
           vChangeAttr(COLOR(CRED, BLK));
 
-        vPosCur(0, i + 1);
+        vPosCur(0, (byte)(i + 1));
         v_printf("%s%-10s", rankplayer[i]->baseflag ? "*" : " ",
                  rankplayer[i]->name);
         vChangeAttr(COLOR(CRED, BLK));
-        vPosCur(18, i + 1);
+        vPosCur(18, (byte)(i + 1));
         v_printf("%4d %4d %4d %6d", rankplayer[i]->hits, rankplayer[i]->gethit,
                  rankplayer[i]->hitown, rankplayer[i]->score);
         thitsr += rankplayer[i]->hits;
@@ -1106,11 +1067,11 @@ void doscores(void) {
         else
           vChangeAttr(COLOR(GRN, BLK));
 
-        vPosCur(0, i + 12);
+        vPosCur(0, (byte)(i + 12));
         v_printf("%s%-10s", rankplayer[i + 20]->baseflag ? "*" : " ",
                  rankplayer[i + 20]->name);
         vChangeAttr(COLOR(GRN, BLK));
-        vPosCur(18, i + 12);
+        vPosCur(18, (byte)(i + 12));
         v_printf("%4d %4d %4d %6d", rankplayer[i + 20]->hits,
                  rankplayer[i + 20]->gethit, rankplayer[i + 20]->hitown,
                  rankplayer[i + 20]->score);
@@ -1138,11 +1099,11 @@ void doscores(void) {
         else
           vChangeAttr(COLOR(CRED, BLK));
 
-        vPosCur(2, i + 1);
+        vPosCur(2, (byte)(i + 1));
         v_printf("%s %-10s", rankplayer[i]->baseflag ? "*" : " ",
                  rankplayer[i]->name);
         vChangeAttr(COLOR(CRED, BLK));
-        vPosCur(24, i + 1);
+        vPosCur(24, (byte)(i + 1));
         v_printf("%5d   %6d", rankplayer[i]->hits, rankplayer[i]->score);
         thitsr += rankplayer[i]->hits;
         tgethitr += rankplayer[i]->gethit;
@@ -1156,11 +1117,11 @@ void doscores(void) {
         else
           vChangeAttr(COLOR(GRN, BLK));
 
-        vPosCur(2, i + 12);
+        vPosCur(2, (byte)(i + 12));
         v_printf("%s %-10s", rankplayer[i + 20]->baseflag ? "*" : " ",
                  rankplayer[i + 20]->name);
         vChangeAttr(COLOR(GRN, BLK));
-        vPosCur(24, i + 12);
+        vPosCur(24, (byte)(i + 12));
         v_printf("%5d   %6d", rankplayer[i + 20]->hits,
                  rankplayer[i + 20]->score);
         thitsg += rankplayer[i + 20]->hits;
@@ -1504,9 +1465,9 @@ void WriteGmData(void) {
     fwrite(game.redtm2, sizeof(char), 10, gd);
     fwrite(game.grntm2, sizeof(char), 10, gd);
     for (i = 1; i < 41; ++i) {
-      fwrite(&player[i].passport, sizeof(char), 10, gd);
-      fwrite(&player[i].name, sizeof(char), 10, gd);
-      fwrite(&player[i].score, sizeof(int), 1, gd);
+      fwrite((void *)&player[i].passport, sizeof(char), 10, gd);
+      fwrite((void *)&player[i].name, sizeof(char), 10, gd);
+      fwrite((void *)&player[i].score, sizeof(int), 1, gd);
     }
     fclose(gd);
   } else
@@ -1534,7 +1495,6 @@ void validate(char *filename, unsigned int checksum) {
   printf("ok\n");
 }
 #pragma optimize("", off)
-
 byte WaitAck(int prt, int count) {
   int x;
   int quit = FALSE;
@@ -1563,5 +1523,99 @@ byte WaitAck(int prt, int count) {
 
 HOST_sendsn(unsigned port, char *string, int size) {
   while (size--) charout(PC, *string++);
+}
+
+void ControlBootScreen() {
+  char *ts;
+
+  ts = (char *)malloc(100);
+
+  vPage(1);
+  vPosCur(0, 0);
+  vChangeAttr(hrcNORM);
+  vBox(0xffff, '°', 80, 25);
+  vChangeAttr(hrcINTEN | hrcREV);
+  vBox(0xffff, ' ', 80, 5);
+  vBorder(80, 6, 2);
+  vPosCur(2, 2);
+  sprintf(ts, "PHOTON Gamma System, Revision %s  Date:%s", SYSTEMVERSION,
+          SYSTEMDATE);
+  v_sends(ts);
+  vPosCur(2, 3);
+  sprintf(ts, "(c) 1991,1992 Robert Banz, All Rights Reserved");
+  v_sends(ts);
+  vPosCur(2, 4);
+  sprintf(ts,
+          "Video routines (And even more shit ) (c) 1991,1992 Chris Fanning");
+  vPosCur(0, 24);
+  vChangeAttr(hrcNORM);
+  v_sends("Press any key to continue...");
+
+  free(ts);
+}
+
+void MainLoop() {
+  char quit, temp;
+  int i, j;
+
+  do /*game loop*/
+  {
+    SetupMonoIdle(1); /*resetup monitor screen*/
+    info("<<<< NEW GAME >>>>");
+    info(" ");
+    info("Sending track to CD & Effects");
+    SelectTrack(0); /*pick game track*/
+    info("-SENT PRINT TO DC");
+    charout(DC, 0xE7);
+    charout(DC, 0xE4); /*SEND TO DC GO-AND-PRINT*/
+#ifdef DEBUG
+    info(" Awaiting Acknowledge");
+#endif
+    WaitAck(DC, 4);
+#ifdef DEBUG
+    info(" ...Acknlowledge Rec'd");
+#endif
+    for (i = 1; i <= 42; ++i) /*de-allocate slots*/
+      player[i].passport[0] = 32;
+    for (i = 1; i <= 40; ++i) /*initialize pod performance*/
+    {
+      pod[i].id = 0;
+      pod[i].base = 0;
+      pod[i].rxmiss = 0;
+      pod[i].rxbad = 0;
+      pod[i].txmiss = 0;
+      pod[i].txbad = 0;
+      pod[i].podid = 0;
+      pod[i].hitsent = 0;
+      pod[i].hitackn = 0;
+      pod[i].valcode = 0;
+      pod[i].missinrow = 0;
+      pod[i].resetflag = ' ';
+      badradio = 0;
+    }
+    quit = handle_pregame(); /*got to Et/keyboard handler*/
+    if (quit != TRUE) {
+      ctrl_e = FALSE;
+      rungame();        /*run the game*/
+      SetupMonoIdle(0); /*setup monitor for idle*/
+      vPage(0);
+      vStatLine("STRATEGIC SUMMARY", 17, COLOR(HWHT, BLU), 1);
+      vPage(1);
+      if ((badradio < 30) && (ctrl_e == FALSE))
+        WritePodPerform(); /*write pod performance*/
+      if ((ctrl_e == FALSE) && (curconfig.savedata))
+        WriteGmData(); /*write game data*/
+      if (curconfig.dc == ON)
+        SendToDC(); /*transfer*/
+      else
+        sent = FALSE;
+      if (sent == TRUE) /*if transfer successful ...*/
+      {
+        clrcga();
+        setupcga(TWEENTEXT);
+      } else
+        setupcga(NOXFER);
+    }
+  } while (quit == FALSE);
 }
 

@@ -18,6 +18,8 @@
 021392_  ASD libraries
 032592_	Release Version : Team names on Mono Screen,
                         Hotkeys listed
+071993_ We're back! (no sir, didn't like it.)
+        Attempting to repair the memory hole.
 *************************************/
 
 void UpdateView(byte view) {
@@ -106,15 +108,15 @@ void UpdateView(byte view) {
     switch (view) {
       case 2:
         for (z = 0; z < 20; ++z) {
-          vPosCur(3 + z * 3, 14);
+          vPosCur((byte)(3 + z * 3), 14);
           v_printf("%2x", npoll[z + 5]);
-          vPosCur(3 + z * 3, 18);
+          vPosCur((byte)(3 + z * 3), 18);
           v_printf("%2x", npoll[z + 31]);
         }
         for (z = 0; z < 5; ++z) {
-          vPosCur(3 + z * 3, 16);
+          vPosCur((byte)(3 + z * 3), 16);
           v_printf("%2x", npoll[z + 25]);
-          vPosCur(3 + z * 3, 20);
+          vPosCur((byte)(3 + z * 3), 20);
           v_printf("%2x", npoll[z + 55]);
         }
         break;
@@ -123,22 +125,22 @@ void UpdateView(byte view) {
         if (curconfig.field == 2) {
           for (z = 0; z < 10; ++z) {
             if (player[z * 2 + 1].used) {
-              vPosCur(12, z + 12);
+              vPosCur(12, (byte)(z + 12));
               v_printf("%5d", player[z * 2 + 1].score);
               rt1 += player[z * 2 + 1].score;
             }
             if (player[z * 2 + 21].used) {
-              vPosCur(32, z + 12);
+              vPosCur(32, (byte)(z + 12));
               v_printf("%5d", player[z * 2 + 21].score);
               gt1 += player[z * 2 + 21].score;
             }
             if (player[z * 2 + 2].used) {
-              vPosCur(52, z + 12);
+              vPosCur(52, (byte)(z + 12));
               v_printf("%5d", player[z * 2 + 2].score);
               rt2 += player[z * 2 + 2].score;
             }
             if (player[z * 2 + 22].used) {
-              vPosCur(72, z + 12);
+              vPosCur(72, (byte)(z + 12));
               v_printf("%5d", player[z * 2 + 22].score);
               gt2 += player[z * 2 + 22].score;
             }
@@ -154,22 +156,22 @@ void UpdateView(byte view) {
         } else {
           for (z = 0; z < 10; ++z) {
             if (player[z + 1].used) {
-              vPosCur(12, z + 12);
+              vPosCur(12, (byte)(z + 12));
               v_printf("%5d", player[z + 1].score);
               rt1 += player[z + 1].score;
             }
             if (player[z + 11].used) {
-              vPosCur(32, z + 12);
+              vPosCur(32, (byte)(z + 12));
               v_printf("%5d", player[z + 11].score);
               rt1 += player[z + 11].score;
             }
             if (player[z + 21].used) {
-              vPosCur(52, z + 12);
+              vPosCur(52, (byte)(z + 12));
               v_printf("%5d", player[z + 21].score);
               gt1 += player[z + 21].score;
             }
             if (player[z + 31].used) {
-              vPosCur(72, z + 12);
+              vPosCur(72, (byte)(z + 12));
               v_printf("%5d", player[z + 31].score);
               gt1 += player[z + 31].score;
             }
@@ -183,7 +185,7 @@ void UpdateView(byte view) {
       case 1:
       case 6:
         for (z = 0; z < 20; z += 2) {
-          vPosCur(0, (int)((z / 2) + 14));
+          vPosCur(0, (byte)((z / 2) + 14));
           if (view == 1) {
             v_printf(
                 "%c%2d %3d %3d %3d³%3d %3d³%3d %3d³%3d %3dº%c%2d %3d %3d "
@@ -235,17 +237,17 @@ void DispGameModes2(int row, int mode, char *red, char *grn) {
   int i;
   vChangeAttr(COLOR(BLK, WHT));
   if (mode == PUBLIC) {
-    vPosCur(7, row);
+    vPosCur(7, (byte)row);
     v_printf("PUBLIC");
   } else if (mode == LEAGUE) {
-    vPosCur(7, row);
+    vPosCur(7, (byte)row);
     v_printf("LEAGUE -            vs ");
-    vPosCur(16, row);
+    vPosCur(16, (byte)row);
     v_printf("%10s", red);
-    vPosCur(30, row);
+    vPosCur(30, (byte)row);
     v_printf("%10s", grn);
   } else if (mode == FREEFORALL) {
-    vPosCur(7, row);
+    vPosCur(7, (byte)row);
     v_printf("FREE FOR ALL");
   }
 }

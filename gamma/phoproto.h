@@ -23,7 +23,8 @@ void IncDate(void);
 void WriteGmData(void);
 void validate(char *, unsigned int);
 byte WaitAck(int, int);
-
+void ControlBootScreen();
+void MainLoop();
 /***********************************
  * DEFINED IN GAMMA2.C              *
  ***********************************/

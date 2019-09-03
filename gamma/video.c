@@ -9,6 +9,15 @@
  *																									*
  ***************************************************************************/
 
+/* Dual page problems currently under repair.
+
+   vpage.linemem, .pagemem are a tad too small. (?)
+            r.b. 7/19/93
+
+    The only other possible thing is to add bounds checking to v_printf,
+    v_sendsn & v_sends.
+*/
+
 #include "video.h"
 #include <conio.h>
 #include <dos.h>
@@ -107,13 +116,22 @@ int vInit(char adapter) {
     vbase.pages = apages[1];
   else
     vbase.pages = apages[0];
-  numbytes += vbase.pages.swidth * 2; /* enough for a line of scrap */
-  numbytes += apages[0].numidx * 2;   /* another screenfull */
+
+  /* Made it look at the largest page: 7/19/93 */
+
+  numbytes += apages[1].swidth * 2; /* enough for a line of scrap */
+  numbytes += apages[1].numidx * 2; /* another screenfull */
   if (!(vbase.imagemem = (unsigned short _far *)_fmalloc(numbytes)))
     return (VNOMEM);
   _fmemset(vbase.imagemem, 0, numbytes);
 
-  vbase.linemem = &vbase.imagemem[IM_MEMTOTAL / 2 + vbase.pages.numidx];
+  /* This is possibly wrong: R.B. 7/19/93 */
+  /* It's not looking at the "largest" page, which is the mono screen */
+  /* (hmm...) */
+
+  /* vbase.linemem = &vbase.imagemem[IM_MEMTOTAL/2 + vbase.pages.numidx];*/
+  vbase.linemem = &vbase.imagemem[IM_MEMTOTAL / 2 + apages[1].numidx];
+
   vbase.curpage = 0;
 
   vCursorControl(DEFAULT_CURSOR);
@@ -581,12 +599,12 @@ void vPage(unsigned char page) {
   if (vbase.curpage) /* don't copy visual onto visual */
     switch (page) {
       case NUMPAGES: /* copy to visual page from current */
-                     /* current ---> visual */
+        /* current ---> visual */
         _fmemcpy(apages[0].pagemem, apages[vbase.curpage].pagemem,
                  vbase.pages.numidx * 2);
         break;
       case NUMPAGES + 1: /* copy from visual page to current */
-                         /* visual  ---> current */
+        /* visual  ---> current */
         _fmemcpy(apages[vbase.curpage].pagemem, apages[0].pagemem,
                  vbase.pages.numidx * 2);
         break;

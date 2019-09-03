@@ -287,7 +287,7 @@ void setupcga(byte type) {
         fgets(textinfo[y], 40, fp);
         nl_to_null(textinfo[y]);
         fgetc(fp);
-        vPosCur(0, y + 5);
+        vPosCur(0, (byte)(y + 5));
         vChangeAttr(COLOR(BLK, WHT));
         v_sends(textinfo[y]);
       }
@@ -323,7 +323,7 @@ void setupcga(byte type) {
     vPosCur(10, 2);
     v_printf("%s.%s.%s.%s.%s", STORENUM, SITENUM, OPTNUM, LICNUM, REVNUM);
     for (y = 0; y < 10; ++y) {
-      vPosCur(0, y + 5);
+      vPosCur(0, (byte)(y + 5));
       vChangeAttr(COLOR(BLK, WHT));
       v_sends(textinfo[y]);
     }
@@ -622,21 +622,21 @@ void GetRedTeam(byte teams, byte who) {
       for (o = 0; o < 10; ++o) {
         player[m + 1].passport[o] = transfer[0][(20 * m) + o + 22];
         player[m + 1].name[o] = transfer[0][(20 * m) + 10 + o + 22];
-        CheckPassport(&player[m + 1].passport);
+        CheckPassport((char *)player[m + 1].passport);
       }
   if (who == ALPHA)
     for (m = 0; m < 10; ++m)
       for (o = 0; o < 10; ++o) {
         player[(m * 2) + 1].passport[o] = transfer[0][(20 * m) + o + 22];
         player[(m * 2) + 1].name[o] = transfer[0][(20 * m) + 10 + o + 22];
-        CheckPassport(&player[(m * 2) + 1].passport);
+        CheckPassport((char *)player[(m * 2) + 1].passport);
       }
   if (who == OMEGA)
     for (m = 0; m < 10; ++m)
       for (o = 0; o < 10; ++o) {
         player[(m * 2) + 2].passport[o] = transfer[0][(20 * m) + o + 22];
         player[(m * 2) + 2].name[o] = transfer[0][(20 * m) + 10 + o + 22];
-        CheckPassport(&player[(m * 2) + 2].passport);
+        CheckPassport((char *)player[(m * 2) + 2].passport);
       }
 }
 
@@ -655,28 +655,28 @@ void GetGrnTeam(byte teams, byte who) {
       for (o = 0; o < 10; ++o) {
         player[m + 21].passport[o] = transfer[1][(20 * m) + o + 22];
         player[m + 21].name[o] = transfer[1][(20 * m) + 10 + o + 22];
-        CheckPassport(&player[m + 21].passport);
+        CheckPassport((char *)player[m + 21].passport);
       }
   if (who == GREEN)
     for (m = 0; m < 20; ++m)
       for (o = 0; o < 10; ++o) {
         player[m + 21].passport[o] = transfer[0][(20 * m) + o + 22];
         player[m + 21].name[o] = transfer[0][(20 * m) + 10 + o + 22];
-        CheckPassport(&player[m + 21].passport);
+        CheckPassport((char *)player[m + 21].passport);
       }
   if (who == ALPHA)
     for (m = 0; m < 10; ++m)
       for (o = 0; o < 10; ++o) {
         player[(m * 2) + 21].passport[o] = transfer[1][(20 * m) + o + 22];
         player[(m * 2) + 21].name[o] = transfer[1][(20 * m) + 10 + o + 22];
-        CheckPassport(&player[(m * 2) + 21].passport);
+        CheckPassport((char *)player[(m * 2) + 21].passport);
       }
   if (who == OMEGA)
     for (m = 0; m < 10; ++m)
       for (o = 0; o < 10; ++o) {
         player[(m * 2) + 22].passport[o] = transfer[1][(20 * m) + o + 22];
         player[(m * 2) + 22].name[o] = transfer[1][(20 * m) + 10 + o + 22];
-        CheckPassport(player[(m * 2) + 22].passport);
+        CheckPassport((char *)player[(m * 2) + 22].passport);
       }
 }
 
