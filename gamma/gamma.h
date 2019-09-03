@@ -161,9 +161,9 @@ struct config {
   byte pub_hcp;
   byte lea_hcp;
   byte ffa_hcp;
-  char alpha_red[10], alpha_grn[10];
-  char omega_red[10], omega_grn[10];
-  char beta_red[10], beta_grn[10];
+  char alpha_red[15], alpha_grn[15];
+  char omega_red[15], omega_grn[15];
+  char beta_red[15], beta_grn[15];
   int length;
   byte vidmode;
   char mess_path[10], pod_path[10], data_path[10], log_path[10];
@@ -177,7 +177,7 @@ struct config {
 #pragma pack()
 
 struct playertype {
-  char name[10];
+  char name[15];
   char passport[10];
   int score;
   unsigned char baseflag;

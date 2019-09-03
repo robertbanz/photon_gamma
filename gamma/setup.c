@@ -29,6 +29,7 @@ void sys_config(byte configured) {
   curconfig.et1port = newconfig.et1port;
   curconfig.et2port = newconfig.et2port;
   curconfig.ecport = newconfig.ecport;
+  curconfig.etfake = newconfig.etfake;
 
   if ((newconfig.pc == TRUE) &
       ((newconfig.pc != curconfig.pc) | (configured == FALSE))) {
@@ -77,7 +78,7 @@ void sys_config(byte configured) {
   }
 }
 
-/*compile these next two functions into one.*/
+/*combine these next two functions into one.*/
 
 #pragma optimize("", off)
 

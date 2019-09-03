@@ -3,6 +3,8 @@
 /********************/
 /*#define DEBUG*/
 #define SYSTEM_PROGRAM
+#undef COPYRIGHT_PAUSE
+
 /* 060692  Fixed problems with people getting base points in freeforall */
 /* 		  (hey, it only happened in Blowcago with their sucky radio!
  */
@@ -16,9 +18,10 @@
 /* 062492  Rob fixes other stupid mistake in the 061992 version */
 /* 072392  Rob just can't seem to get the DC transfer right !   */
 /* 083092	Should have fixed the HOP in free fo all problem
-                          Filter bad codes from going to the PC.
-                          Can cause unsightly side effects.
-*/
+                  Filter bad codes from going to the PC.
+                  Can cause unsightly side effects.
+/* 08xx93 Made the program almost readable :)	*/
+
 /*And hopefully didn't create more.*/
 
 #define __TOPLEV
@@ -73,7 +76,7 @@ main(int argc, char **argv) {
     exit(-1);
   }
 
-  MonoCursorOff();
+  /*MonoCursorOff();*/
 
   vPage(0);
   vBlinkControl(BLOFF);
@@ -87,8 +90,11 @@ main(int argc, char **argv) {
 
   ControlBootScreen();
   setupcga(BOOT);
+
+#ifdef COPYRIGHT_PAUSE
   while (!kbhit())
     ;
+#endif
 
   loadconfig("system.ini"); /*load default configuration*/
   sys_config(FALSE);        /*configure*/
@@ -200,13 +206,6 @@ void UpdateWeeklyInfo(char *filename) {
   fclose(indata);
 }
 
-void MonoCursorOff(void) {
-  outp(0x3b4, 14);
-  outp(0x3b5, 2);
-  outp(0x3b4, 15);
-  outp(0x3b5, 81);
-}
-
 void LoadFakeGame(char *name) {
   FILE *indata;
   char *ts[80];
@@ -227,8 +226,6 @@ void LoadFakeGame(char *name) {
     memcpy(player[i].name, rec.player[i - 1].name, 10);
     if (rec.player[i - 1].used) memcpy(player[i].passport, "0000000010", 10);
   }
-
-  /*    memcpy(&RadioData[0], &rec.GameData[0], 360 * 40);*/
 
   ItsFake = 1;
 
@@ -303,9 +300,7 @@ byte handle_pregame(void) {
     stl = 24;
 
 AfterReConfig: /*Re-entrance if a ctrl=r is done...*/
-  if ((curconfig.et1 == RED) ||
-      (curconfig.et2 == GREEN)) /*set Et's to their right places*/
-  {
+  if ((curconfig.et1 == RED) || (curconfig.et2 == GREEN)) {
     Et1 = &Eta;
     Et2 = &Etb;
   } else if ((curconfig.et1 == GREEN) || (curconfig.et2 == RED)) {
@@ -337,11 +332,8 @@ AfterReConfig: /*Re-entrance if a ctrl=r is done...*/
   /*while(getch() != 'r');*/
   Eta = 1;
 
-  while (((Eta < 4) || (Etb < 4)) &
-         (bye == FALSE)) /*if both haven't started or ctrl_q'd*/
-  {
-    if (kbhit()) /*check keyboard*/
-    {
+  while (((Eta < 4) || (Etb < 4)) & (bye == FALSE)) {
+    if (kbhit()) {
       character = getch();
       if (character == 'f') {
         /*Fake Game Mode!*/
@@ -357,8 +349,7 @@ AfterReConfig: /*Re-entrance if a ctrl=r is done...*/
       } else if ((character == 'l') || (character == 'L')) {
         charout(DC, 0xE9);
         info("Postgame Printout Requested");
-      } else if (('1' <= character) & ('8' >= character)) /*select tracks*/
-      {
+      } else if (('1' <= character) & ('8' >= character)) {
         info("Sending new track to CD/EFFECTS");
         gametrack = character - 48;
         CD_track(gametrack); /*send track to cd*/
@@ -366,8 +357,7 @@ AfterReConfig: /*Re-entrance if a ctrl=r is done...*/
           effectsout("\b\b\b", 3); /*back space old ru command*/
           settrack();              /*send ru(x) to effects*/
         }
-      } else if (character == 18) /*re-configure option*/
-      {
+      } else if (character == 18) {
         setupmenu();
         sys_config(TRUE);
         ConfigEts(TRUE);
@@ -375,12 +365,10 @@ AfterReConfig: /*Re-entrance if a ctrl=r is done...*/
       }
     }
     /*Check ET#1*/
-    if (Eta < 4) /*if et1 hasn't started*/
-    {
+    if (Eta < 4) {
       if (curconfig.etfake != 1) ET_CheckDrop(ET1);
       ReadPort(ET1 + 5, &status);
-      if (status.DR == 1) /*if there is a character to read*/
-      {
+      if (status.DR == 1) {
         recd = inp(ET1); /*read character*/
         if (recd == REQXFER) {
           Eta = 1;              /*set Eta status to Reading*/
@@ -391,8 +379,7 @@ AfterReConfig: /*Re-entrance if a ctrl=r is done...*/
           ReadXfer(ET1);             /*read the transfer*/
           Eta = 2;                   /*set Eta to Awaiting Et Start*/
           EtStatus(*Et1, *Et2);      /*display et status*/
-
-        } else if (recd == WAITGC) /*if ET START*/
+        } else if (recd == WAITGC)   /*if ET START*/
         {
           Eta = 3; /*set to Waiting field start*/
           if ((Etb >= 3) & (tokn == TRUE)) {
@@ -468,25 +455,6 @@ AfterReConfig: /*Re-entrance if a ctrl=r is done...*/
     return (TRUE);
   else
     return (FALSE);
-}
-
-byte PC_spcl(byte info) {
-  switch (info) {
-    case 0xE1:
-    case 0xE2:
-    case 0xE3:
-    case 0xE4:
-    case 0xE5:
-    case 0xE6:
-    case 0xE7:
-    case 0xE9:
-    case 0xEA:
-    case 0xEE:
-      return 1;
-      break;
-    default:
-      return 0;
-  }
 }
 
 void SetupPlayerData(void) {
@@ -615,10 +583,12 @@ byte game_dokeyboard(void) {
   if (kbhit()) {
     gotch = getch();
     pl = 10;
-    /*if (gotch == password[0])
-            pl = 1;
+#ifdef SECURE_CONSOLE
+    if (gotch == password[0])
+      pl = 1;
     else if (password[pl] == gotch)
-            if (pl < 10) ++pl;*/
+      if (pl < 10) ++pl;
+#endif
     switch (gotch) {
       case 'l':
       case 'L':
@@ -866,9 +836,6 @@ void rungame(void) {
       PrintMono(3, 25, tempst);
       vPage(0);
       vChangeAttr(COLOR(HWHT, BLU));
-      vPosCur(18, 23);
-      /*v_printf("   %2d:%02d - %2d-%02d-%04d ", curtime.hour, curtime.minute,
-       * curdate.month, curdate.day, curdate.year);*/
       vPage(1);
       sprintf(tempst, "BS:%3d ES:%3d RB:%d", sbegin, send, badradio);
       PrintMono(10, 1, tempst);
@@ -1081,26 +1048,22 @@ void loadconfig(char *configfile) /*Load a config structure from disk*/
   }
 }
 
-void processpoll_f(void) /*Function for processpoll*/
-{
+void processpoll_f(void) {
   pod[slotnum].missinrow = 0; /*It's received SOMETHING!*/
   if (slotnum % 2 == 0)
     gameslot = game.mode1; /* should be game.mode2, but this is only a test...*/
   else
     gameslot = game.mode1;
-  if (player[slotnum].used == TRUE) /*Don't process it unless its used*/
-  {                                 /* GET BASE */
+  if (player[slotnum].used == TRUE) {
+    /* GET BASE */
     if (value != 0x80) {
-      if ((value == 0x2B) && (gameslot != FREEFORALL)) /*Red Base Check*/
-      {
+      if ((value == 0x2B) && (gameslot != FREEFORALL)) {
         ++pod[slotnum].base;
         if ((color == RED) & (player[slotnum].baseflag == 0)) {
           player[slotnum].baseflag = 1;
           player[slotnum].score = player[slotnum].score + 200;
         }
-      } else if ((value == 0x35) &&
-                 (gameslot != FREEFORALL)) /*Check green base*/
-      {
+      } else if ((value == 0x35) && (gameslot != FREEFORALL)) {
         ++pod[slotnum].base;
         if ((color == GREEN) & (player[slotnum].baseflag == 0)) {
           player[slotnum].baseflag = 1;
@@ -1109,8 +1072,7 @@ void processpoll_f(void) /*Function for processpoll*/
       }
       /* HIT OWN PLAYER */
       else if ((color == RED) && (irslot[slotnum][RED] == value) &&
-               (game.mode1 != FREEFORALL)) /*Red team/ hit own player*/
-      {
+               (game.mode1 != FREEFORALL)) {
         player[slotnum].score = player[slotnum].score - 30;
         ++red_down;
         ++pod[slotnum].hitsent;
@@ -1118,8 +1080,7 @@ void processpoll_f(void) /*Function for processpoll*/
         ++pod[slotnum].valcode;
         ++player[slotnum].hitown;
       } else if ((color == GREEN) && (irslot[slotnum - 20][GREEN] == value) &&
-                 (game.mode1 != FREEFORALL)) /*Grn team/ hit own player*/
-      {
+                 (game.mode1 != FREEFORALL)) {
         player[slotnum].score = player[slotnum].score - 30;
         ++red_down;
         ++pod[slotnum].hitsent;
@@ -1127,8 +1088,7 @@ void processpoll_f(void) /*Function for processpoll*/
         ++pod[slotnum].valcode;
         ++player[slotnum].hitown;
       } else if ((color == TEST) & (irslot[slotnum - 40][TEST] == value) &&
-                 (gameslot != FREEFORALL)) /*Test / hit own player*/
-      {
+                 (gameslot != FREEFORALL)) {
         player[slotnum].score = player[slotnum].score - 30;
         ++red_down;
         ++pod[slotnum].hitsent;
@@ -1136,12 +1096,9 @@ void processpoll_f(void) /*Function for processpoll*/
         ++player[slotnum].hitown;
       }
       /* HIT OPPONENT */
-      else if (player[slotir[value]].used ==
-               TRUE) /*If the code received is used...*/
-      {
-        vPage(0);
-        if (0 < slotir[value] < 41) /*If its a valid codes...*/
-        {
+      else if (player[slotir[value]].used == TRUE) {
+        /*vPage(0);*/
+        if (0 < slotir[value] < 41) {
           if ((!(((((0 < slotir[value]) &&
                     (slotir[value] <= 20)) && /* IF (NOT (ON SAME TEAM AND NOT
                                                  FFA)) AND NOT HOP */
@@ -1182,14 +1139,12 @@ void processpoll_f(void) /*Function for processpoll*/
             npoll[slot] = 0;
             ++pod[slotnum].txbad;
           }
-        } else if (40 < slotir[value] < 43) /*Test Pods*/
-        {
+        } else if (40 < slotir[value] < 43) {
           ++red_down;
           down[red_down] = value;
           ++pod[slotir[value]].hitsent;
           ++pod[slotnum].valcode;
         }
-
       } else if (IsId(value) == TRUE) {
         if ((pod[slotnum].podid == 0) && (sigid[value] != 0)) {
           pod[slotnum].podid = sigid[value];
@@ -1672,7 +1627,6 @@ void ControlBootScreen() {
   vPosCur(0, 24);
   vChangeAttr(hrcNORM);
   v_sends("Press any key to continue...");
-
   free(ts);
 }
 
@@ -1702,8 +1656,10 @@ void MainLoop() {
       info(" ...Acknlowledge Rec'd");
 #endif
     }
-    for (i = 1; i <= 42; ++i) /*de-allocate slots*/
+    for (i = 1; i <= 42; ++i) { /*de-allocate slots*/
       player[i].passport[0] = 32;
+      memset(player[i].name, 32, 15);
+    }
     for (i = 1; i <= 40; ++i) /*initialize pod performance*/
     {
       pod[i].id = 0;
@@ -1732,7 +1688,7 @@ void MainLoop() {
         WritePodPerform(); /*write pod performance*/
       if ((ctrl_e == FALSE) && (curconfig.savedata))
         WriteGmData(); /*write game data*/
-      if (curconfig.dc == ON)
+      if (curconfig.dc)
         SendToDC(); /*transfer*/
       else
         sent = FALSE;
@@ -1748,4 +1704,3 @@ void MainLoop() {
     }
   } while (quit == FALSE);
 }
-
