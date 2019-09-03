@@ -21,7 +21,14 @@ Version .3 041592   "Tournament" mode added
 Version .4 041792   "Tournament" mode actually did something!
 Version .5 041892   Fixed double printing fuck ups.
 Version .6 060692   Fixed "eat me" mode when game is longer than memory buffer
+Version 1.0 120593  All kinds of new stuffs:
+                    - spiffy status line
+                    - nicer code
+                    - new name
+                    - tournament mode about to go bye-bye
+                    - protocol errors fixed
 *******************************************/
+
 void setupslots(void);
 struct dostime_t curtime; /*current time*/
 struct dosdate_t curdate; /*current date*/
@@ -48,7 +55,6 @@ struct podstruct {
   byte missinrow;
   byte resetflag;
 } pod[41];
-#pragma pack()
 
 struct com_5 {
   unsigned DR : 1;
@@ -80,12 +86,12 @@ int score[40];
 #define SAVE 0xE9
 #define STATLINE 0xEA
 
-#define COM 0x2F8
+#define COM 0x3F8
 
-#define ReadPort(x, y)  \
-  {                     \
-    incoming = y;       \
-    *incoming = inp(x); \
+#define ReadPort(x, y)        \
+  {                           \
+    incoming = y;             \
+    *incoming = (char)inp(x); \
   }
 
 unsigned char irslot[256];
@@ -132,20 +138,20 @@ main() {
   vClearScreen();
   vChangeAttr(COLOR(WHT, BLK));
   vPosCur(1, 1);
-  asends("Copyright (c) 1991,92 Robert Banz, ");
+  asends("Copyright (c) 1992,93 Robert Banz, ");
   vCR();
   vLF();
   asends("All rights reserved");
   vCR();
   vLF();
-  vStatLine("     GAMMA PC/DS 080793 V1.0", 0, COLOR(WHT, BLU), 1);
+  vStatLine("     GAMMA PC/DS 120593 V1.0", 0, COLOR(WHT, BLU), 1);
   while (quit == 0) {
     if (kbhit()) switch (getch()) {
         case 17:
           exit(-1);
           break;
       }
-    ReadPort(COM + 5, &pinfo);
+    ReadPort(COM + 5, (char *)&pinfo);
     if (pinfo.DR == 1) {
       temp = inp(COM);
     inter:
@@ -190,16 +196,8 @@ main() {
           break;
         case SENDDATA:
           for (i = 0; i < 40; ++i) {
-            for (j = 0; j < 10; ++j) {
-              do {
-                ReadPort(COM + 5, &pinfo);
-              } while (pinfo.DR == 0);
-              pl[i].playername[j] = (char)inp(COM);
-            }
-            do {
-              ReadPort(COM + 5, &pinfo);
-            } while (pinfo.DR == 0);
-            pl[i].used = (char)inp(COM);
+            HOST_recvsn(COM, pl[i].playername, 10);
+            HOST_recvsn(COM, &pl[i].used, 1);
           }
           vStatLine("Game Data Received...", 4, COLOR(HWHT, BLU), 1);
           fflag = 1;
@@ -212,41 +210,38 @@ main() {
           vStatLine("", 0, COLOR(HWHT, HBLU), 1);
           break;
         case STARTPOLL:
+
           fflag = 0;
-          for (i = 0; i < 40; ++i) {
-            do {
-              ReadPort(COM + 5, &pinfo);
-            } while (pinfo.DR == 0);
-            din[i] = (char)inp(COM);
-          }
+          HOST_recvsn(COM, din, 40);
           do {
-            ReadPort(COM + 5, &pinfo);
+            ReadPort(COM + 5, (char *)&pinfo);
           } while (pinfo.DR == 0);
           gnumber = ((byte)(inp(COM))) << 8;
           do {
-            ReadPort(COM + 5, &pinfo);
+            ReadPort(COM + 5, (char *)&pinfo);
           } while (pinfo.DR == 0);
-          gnumber += (byte)(inp(COM));
+          gnumber = gnumber | (byte)(inp(COM));
           do {
-            ReadPort(COM + 5, &pinfo);
+            ReadPort(COM + 5, (char *)&pinfo);
           } while (pinfo.DR == 0);
           gtime = ((byte)(inp(COM))) << 8;
           do {
-            ReadPort(COM + 5, &pinfo);
+            ReadPort(COM + 5, (char *)&pinfo);
           } while (pinfo.DR == 0);
-          gtime += (byte)(inp(COM));
+          gtime = gtime | (byte)(inp(COM));
+
           break;
         case ENQMODE:
           if (1 == 1) {
             vStatLine("Reading Game Results", 4, COLOR(WHT, BLU), 1);
 
-            HOST_recvsn(COM, &curtime, sizeof(curtime));
-            HOST_recvsn(COM, &curdate, sizeof(curdate));
+            HOST_recvsn(COM, (void *)&curtime, sizeof(curtime));
+            HOST_recvsn(COM, (void *)&curdate, sizeof(curdate));
             for (l = 1; l < 41; ++l) {
-              HOST_recvsn(COM, &score[l], sizeof(int));
-              HOST_recvsn(COM, &pod[l], sizeof(struct podstruct));
+              HOST_recvsn(COM, (void *)&score[l], sizeof(int));
+              HOST_recvsn(COM, (void *)&pod[l], sizeof(struct podstruct));
             }
-            HOST_recvsn(COM, &game, sizeof(struct gamestruct));
+            HOST_recvsn(COM, (void *)&game, sizeof(struct gamestruct));
           } else
             outp(COM, 0xEF);
           break;
@@ -255,7 +250,7 @@ main() {
           if (fflag == 1)
             fflag = 0;
           else {
-            if (pollnum < 359) memmove(&GameData[pollnum][0], din, 40);
+            if (pollnum < 359) memcpy(&GameData[pollnum][0], din, 40);
             for (i = 0; i < 40; ++i) {
               if (pl[i].used == 1) {
                 if ((pl[i].reset == 0) && (din[i] == 0xEE)) {
@@ -436,7 +431,7 @@ void setupslots() {
 void HOST_recvsn(unsigned int port, char *buffer, size_t size) {
   while (size--) {
     do {
-      ReadPort(port + 5, &pinfo);
+      ReadPort(port + 5, (char *)&pinfo);
     } while (pinfo.DR != 1);
     *buffer++ = inp(port);
   }

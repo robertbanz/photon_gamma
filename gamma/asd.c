@@ -13,6 +13,7 @@
 #include <stdarg.h>
 #include <string.h>
 #include "asddat.h"
+#include "g_asd.h"
 #include "video.h"
 
 unsigned char ASDRESPOND[] = {0x41, 0x53, 0x44, 0xfe, 0xff, 80, 24, 13, 10};
@@ -26,6 +27,7 @@ int ASDInit(char adapter) {
   ASDcore.recv = vGetch;
   ASDcore.ASDput = baseASD;
   ASDcore.ASDsafe = SAFE;
+  ASDcore.ASDgmode = 0;
   return vInit(adapter);
 }
 
@@ -156,6 +158,12 @@ void baseASD(unsigned char inchar) {
     case PAGES:
       ASDwait(pagesASD, 1);
       return;
+      /*DEF'N added for G_ASD codes*/
+#ifdef EXTENDED_GRAPHICS
+    case GASDS:
+      ASDwait(baseG_ASD, 1);
+      return;
+#endif
   }
   if (ASDcore.output) ASDcore.output(inchar);
 }
@@ -171,9 +179,9 @@ void ASDwait(void (*fn_action)(), unsigned char waitfor) {
 void ASDgetargs(unsigned char inchar) {
   ASDcore.ASDargs[ASDcore.ASDargidx++] = (unsigned char)(255 - inchar);
   if (--ASDcore.ASDargsleft) return;
-  ASDcore.ASDcurfn();
   ASDcore.ASDsafe = SAFE;
   ASDcore.ASDput = baseASD;
+  ASDcore.ASDcurfn();
 }
 
 void respondASD(void (*newres)(unsigned char)) { ASDcore.respnd = newres; }

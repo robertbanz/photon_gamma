@@ -2,13 +2,24 @@
  gamma2.c
  *************/
 #define SYSTEM_PROGRAM
+
 #undef __TOPLEV
 #include <conio.h>
 #include <dos.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include "asd.h"
+#include "asddat.h"
 #include "gamma.h"
 #include "video.h"
+
+#ifdef EXTENDED_GRAPHICS
+#include <graph.h>
+#include "fontop.h"
+#include "g_asd.h"
+extern ASD_COMP ASDcore;
+#endif
+
 #define CRED 4
 
 #pragma optimize("", off)
@@ -93,32 +104,11 @@ void SetGameMode(byte *mode, byte source) {
 
 void settrack(void) {
   extern byte gametrack;
-  switch (gametrack) {
-    case 1:
-      effectsout("RU1", 3);
-      break;
-    case 2:
-      effectsout("RU2", 3);
-      break;
-    case 3:
-      effectsout("RU3", 3);
-      break;
-    case 4:
-      effectsout("RU4", 3);
-      break;
-    case 5:
-      effectsout("RU5", 3);
-      break;
-    case 6:
-      effectsout("RU6", 3);
-      break;
-    case 7:
-      effectsout("RU7", 3);
-      break;
-    case 8:
-      effectsout("RU8", 3);
-      break;
-  }
+  char string[20];
+
+  sprintf(string, "RU%d", gametrack);
+
+  effectsout(string, strlen(string));
 }
 
 void setupslots() {
@@ -207,6 +197,7 @@ void setupslots() {
   slotir[0x41] = 40 + 1;
 }
 
+#ifndef EXTENDED_GRAPHICS
 void LOBBY_boot(void) {
   char ts[80];
   vPage(0);
@@ -242,7 +233,48 @@ void LOBBY_boot(void) {
   v_sends("The system is coming up, please wait.");
   vPage(1);
 }
+#else
 
+void LOBBY_boot(void) {
+  char *m;
+  m = (char *)malloc(100);
+
+  sxToGraphics(_VRES16COLOR);
+  sxColorSelect(7, 0);
+  ReadScreen("screens\\logo.asd");
+  sxColorSelect(5, 0);
+  sxDrawLine(0, 125, 639, 125);
+  sxFloodFill(1, 176);
+  sxColorSelect(0, 0);
+  sxFontSelect(1);
+  sxPrintText(1, INCR | 1,
+              "You knew it was coming, you just didn't know when!");
+  sxPrintText(1, INCR | 1,
+              "(c) 1991-93 Robert Banz & Chris Fanning, All Rights Reserved");
+  sxPrintText(1, INCR | 2, "Special Thanks To: John Shappert & Chris Hutson.");
+  sprintf(m, "Date Compiled: %s, Version V%s.", __DATE__, SYSTEMVERSION);
+  sxPrintText(1, INCR | 2, m);
+  sxPrintText(CEN, INCR | 2, "The system is coming up, please wait.");
+
+  free(m);
+}
+
+#endif
+#ifdef EXTENDED_GRAPHICS
+void ReadScreen(char *file) {
+  FILE *scr;
+
+  if ((scr = fopen(file, "rb")) == 0) {
+    return;
+    exit(1);
+  }
+
+  while (!feof(scr)) {
+    ASDcore.ASDput(fgetc(scr));
+  }
+  fclose(scr);
+}
+#endif
 void PrintMessage(int dummy) {
   int x, y;
   FILE *fp;
@@ -250,6 +282,7 @@ void PrintMessage(int dummy) {
   char ts[90];
   char tempstring[50];
 
+#ifndef EXTENDED_GRAPHICS
   sprintf(filename, "%smess.%d", curconfig.mess_path, tnum);
   if ((fp = fopen(filename, "r")) != NULL) {
     fgets(tempstring, 40, fp);
@@ -270,6 +303,8 @@ void PrintMessage(int dummy) {
   fclose(fp);
   if (tnum == 10) tnum = 0;
   vPage(1);
+#else
+#endif
 }
 
 char *TitleString = "Photon Systems Computer ALPHA_01";
@@ -279,7 +314,11 @@ void LOBBY_tween() {
   char ts[90];
   char *SSS;
 
+#ifndef EXTENDED_GRAPHICS
   vPage(0);
+#ifdef EXTENDED_GRAPHICS
+  sxToText();
+#endif
   vChangeAttr(COLOR(BLK, WHT));
   vPosCur(0, 0);
   vBox(0xffff, ' ', 40, 24);
@@ -340,11 +379,26 @@ void LOBBY_tween() {
   } else
     v_sends("None yet!  It could be YOU!");
   vPage(1);
+#else
+
+  sxClear();
+  sxColorSelect(1, 0);
+  sxDrawLine(0, 30, 649, 30);
+  sxFloodFill(1, 1);
+  sxColorSelect(15, 0);
+  sxFontSelect(0);
+  sxPrintText(CEN, 0, TitleString);
+
+#endif
 }
 
 void LOBBY_instokn() {
   int y;
   char ts[80];
+
+#ifdef EXTENDED_GRAPHICS
+  sxToText();
+#endif
 
   vPage(0);
   vChangeAttr(COLOR(BLK, WHT));
@@ -439,6 +493,10 @@ void LOBBY_alert() {
       "      ÜßßÜ Û   Ûßßß ÛßßÜ ßßÛßß", "  þ   Û  Û Û   Û    Û  Û   Û     þ",
       "  þ   ÛßßÛ Û   Ûßß  ÛßßÜ   Û     þ", "      Û  Û ÛÜÜ ÛÜÜÜ Û  Û   Û"};
 
+#ifdef EXTENDED_GRAPHICS
+  sxToText();
+#endif
+
   vPage(0);
   vChangeAttr(COLOR(HWHT, BLK));
   vPosCur(0, 0);
@@ -512,6 +570,10 @@ char *GameType(byte type) {
 void LOBBY_game1_naughty() {
   char ts[20];
 
+#ifdef EXTENDED_GRAPHICS
+  sxToText();
+#endif
+
   vPage(0);
   vChangeAttr(COLOR(WHT, BLK));
   vPosCur(0, 0);
@@ -541,6 +603,10 @@ void LOBBY_game1_naughty() {
 
 void LOBBY_game1_nice() {
   char ts[20];
+
+#ifdef EXTENDED_GRAPHICS
+  sxToText();
+#endif
 
   vPage(0);
   vChangeAttr(COLOR(WHT, BLK));
@@ -645,7 +711,7 @@ int LOBBY_game1_teamud(int color, int naughty) {
   return teamscore;
 }
 
-LOBBY_game1_update(int naughty) {
+void LOBBY_game1_update(int naughty) {
   int tsr, tsg;
   char ts[10];
   int where;
@@ -677,7 +743,6 @@ LOBBY_game1_update(int naughty) {
 void LOBBY_game2() { /*PUT TWO FIELD SETUP HERE ! ! !*/ }
 
 void setupcga(byte type) {
-  CGA_hidecursor();
   switch (type) {
     case BOOT:
       LOBBY_boot();
@@ -701,6 +766,9 @@ void setupcga(byte type) {
       LOBBY_game2();
       break;
   }
+  /*
+CGA_hidecursor();
+  */
 }
 
 void nl_to_null(char *string) {
@@ -716,7 +784,10 @@ void clrcga(void) {
 #pragma optimize("", off)
 void effectsout(char *command, int length) {
   int k, p;
-
+#ifdef DEBUG
+  info("Sending to EC:");
+  info(command);
+#endif
   for (k = 0; k < length; ++k) {
     for (; (slot % 22) != 0;) {
     }
@@ -727,13 +798,6 @@ void effectsout(char *command, int length) {
   }
 }
 #pragma optimize("", on)
-
-void CGA_hidecursor(void) {
-  outp(0x3d4, 14);
-  outp(0x3d5, 0x1f);
-  outp(0x3d4, 15);
-  outp(0x3d5, 0x41);
-}
 
 void EtStatus(byte Et1Stat, byte Et2Stat)
 /*Stats...
@@ -748,6 +812,7 @@ void EtStatus(byte Et1Stat, byte Et2Stat)
 
 { /* 0123456789012345678901234567890123456789 */
   char *SSS;
+  static char *oldSSS = 0;
   char ts[42];
   int i;
   if (Et1Stat == 1) {
@@ -818,12 +883,22 @@ void EtStatus(byte Et1Stat, byte Et2Stat)
     charout(PC, 0xEA);
     HOST_sendsn(PC, ts, 40);
   }
+#ifndef EXTENDED_GRAPHICS
   vPage(0);
   vStatLine(ts, 0, COLOR(HWHT, BLU), 1);
   vPage(1);
+#else
+  if (SSS != oldSSS) {
+    int i;
+    sxFontSelect(0);
+    sxColorSelect(0, 0);
+    for (i = 480; i > 440; --i) sxDrawLine(0, i, 640, i);
+    sxColorSelect(15, 0);
+    sxPrintText(CEN, FBOT | 1, SSS);
+    oldSSS = SSS;
+  }
+#endif
 }
-
-/*this stuff sucks.  rewrite it or I'll kill me*/
 
 void GetRedTeam(byte teams, byte who) {
   int m, o;

@@ -31,6 +31,8 @@
 struct vcontrol vbase;
 vpagestuff apages[NUMPAGES];
 
+int dont_remalloc = 0;
+
 unsigned char cur_sizes[CURSOR_SIZES][ADAPTER_TYPES][2] = {
     32, 0,  32, 0,  32, 0,
     4,  2,  32, 0, /* Hidden Cursor */
@@ -118,13 +120,13 @@ int vInit(char adapter) {
     vbase.pages = apages[0];
 
   /* Made it look at the largest page: 7/19/93 */
-
-  numbytes += apages[1].swidth * 2; /* enough for a line of scrap */
-  numbytes += apages[1].numidx * 2; /* another screenfull */
-  if (!(vbase.imagemem = (unsigned short _far *)_fmalloc(numbytes)))
-    return (VNOMEM);
-  _fmemset(vbase.imagemem, 0, numbytes);
-
+  if (dont_remalloc) {
+    numbytes += apages[1].swidth * 2; /* enough for a line of scrap */
+    numbytes += apages[1].numidx * 2; /* another screenfull */
+    if (!(vbase.imagemem = (unsigned short _far *)_fmalloc(numbytes)))
+      return (VNOMEM);
+    _fmemset(vbase.imagemem, 0, numbytes);
+  }
   /* This is possibly wrong: R.B. 7/19/93 */
   /* It's not looking at the "largest" page, which is the mono screen */
   /* (hmm...) */
@@ -136,6 +138,7 @@ int vInit(char adapter) {
 
   vCursorControl(DEFAULT_CURSOR);
   vBlinkControl(BLOFF);
+  dont_remalloc = 1;
   return (VOK);
 }
 

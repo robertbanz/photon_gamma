@@ -5,52 +5,10 @@
 /******************************************
  *   DEFINED IN GAMMA.C                    *
  *****************************************/
-
-byte handle_pregame(void);
-void rungame(void);
-void interrupt far poll(void);
-void loadconfig(char *);
-void processpoll_f(void);
-byte putdown(byte);
-void doscores(void);
-void SendToDC(void);
-void WaitAPoll(void);
-void TranslateXfer(unsigned int);
-void ResetIBM(void);
-void WritePodPerform(void);
-void IncTime(void);
-void IncDate(void);
-void WriteGmData(void);
-void validate(char *, unsigned int);
-byte WaitAck(int, int);
-void ControlBootScreen();
-void MainLoop();
-void MonoCursorOff(void);
-void UpdateWeeklyInfo(char *filename);
-void LoadWeeklyInfo(char *filename);
-
 /***********************************
  * DEFINED IN GAMMA2.C              *
  ***********************************/
-
-void ReadXfer(unsigned int);
-void SetGameMode(byte *, byte);
-void settrack(void);
-void setupslots(void);
-void setupcga(byte);
-void dispcga(int, int);
-void clrcga(void);
-void effectsout(char *, int);
-void CGA_hidecursor(void);
-void PrintDown(char *, int, int, int);
-void PrintGameMode(int, byte, byte);
-void EtStatus(byte, byte);
-void GetRedTeam(byte, byte);
-void GetGrnTeam(byte, byte);
-void SelectTrack(byte);
-byte ET_CheckDrop(unsigned int);
-void nl_to_null(char *string);
-void Dig_Digit(int digit, byte x, byte y);
+#include "gamma2.h"
 
 /**************************************
  * DEFINED IN GAMMA3.C                 *

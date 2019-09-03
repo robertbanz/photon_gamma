@@ -18,30 +18,19 @@ LINKER	= link
 ILINK  = ilink
 LRF  = echo > NUL
 
-OBJS_EXT  = VIDEOD.OBJ
-OBJS  = ASD.obj ASDMENU.obj PC.obj video.obj $(OBJS_EXT)
-SBRS  = ASD.sbr ASDMENU.sbr PC.sbr video.sbr
+OBJS  = PC.obj
+LIBS_EXT  = asd.lib
+LIBS  = $(LIBS_EXT)
+SBRS  = PC.sbr
 
 all: $(PROJ).exe
 
 .SUFFIXES:
 .SUFFIXES: .sbr .obj .c
 
-ASD.obj : ASD.C video.h asddat.h asd.h
-
-ASD.sbr : ASD.C video.h asddat.h asd.h
-
-ASDMENU.obj : ASDMENU.C asd.h video.h asdmenud.h asdmenu.h
-
-ASDMENU.sbr : ASDMENU.C asd.h video.h asdmenud.h asdmenu.h
-
 PC.obj : PC.C asd.h asdmenu.h video.h
 
 PC.sbr : PC.C asd.h asdmenu.h video.h
-
-video.obj : video.c video.h videodat.h
-
-video.sbr : video.c video.h videodat.h
 
 
 $(PROJ).bsc : $(SBRS)
@@ -49,7 +38,7 @@ $(PROJ).bsc : $(SBRS)
 $(BRFLAGS) $(SBRS)
 <<
 
-$(PROJ).exe : $(OBJS)
+$(PROJ).exe : $(OBJS) $(LIBS)
 !IF $(DEBUG)
 	$(LRF) @<<$(PROJ).lrf
 $(RT_OBJS: = +^

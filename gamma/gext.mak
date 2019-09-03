@@ -1,12 +1,12 @@
-PROJ = gamma
-PROJFILE = gamma.mak
+PROJ = gext
+PROJFILE = gext.mak
 DEBUG = 0
 
 PWBRMAKE  = pwbrmake
 NMAKEBSC1  = set
 NMAKEBSC2  = nmake
 CC  = cl
-CFLAGS_G  =  /BATCH
+CFLAGS_G  = /W2 /DEXTENDED_GRAPHICS /BATCH
 CFLAGS_D  = /Gi$(PROJ).mdt /Zi /Od
 CFLAGS_R  = /Ot /Oi /Ol /Oe /Og /Gs
 MAPFILE_D  = NUL
@@ -20,7 +20,7 @@ LRF  = echo > NUL
 
 OBJS  = GAMMA.obj GAMMA2.obj GAMMA3.obj CD.obj GLIB.obj NEWCONFI.obj\
 	PODPERF.obj SETUP.obj SETHOST.obj
-LIBS_EXT  = asd.lib
+LIBS_EXT  = gasd.lib
 LIBS  = $(LIBS_EXT)
 SBRS  = GAMMA.sbr GAMMA2.sbr GAMMA3.sbr CD.sbr GLIB.sbr NEWCONFI.sbr\
 	PODPERF.sbr SETUP.sbr SETHOST.sbr

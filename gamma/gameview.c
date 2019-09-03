@@ -23,14 +23,14 @@ void ssends(char *ts) {
   while (*ts) asend(*ts++);
 }
 
-struct time {
+struct tme {
   byte minute;
   byte hour;
   byte hsecond;
   byte second;
 };
 
-struct date {
+struct dte {
   int year;
   byte day;
   byte month;
@@ -41,6 +41,7 @@ struct playerst {
   char name[10];
   int score;
 };
+
 struct gameview {
   char dummy[3];
   struct tme time;

@@ -2,7 +2,11 @@
   dc.c
 ***************/
 
+#include <conio.h>
 #include "gamma.h"
+void dispcga(int which, int how);
+void CGA_hidecursor(void);
+
 #define HOST1 0x240
 #define COM2 0x2f8
 #define GC ioport
@@ -16,6 +20,27 @@ byte cga1[2][25][41];
 void initdc(void);
 void dispcgaline(int);
 void PrintOut(void);
+
+/* Revision History*/
+/* ?????? 1.0  Way back in the annals of time, rob needed something
+               really really quick, in fact, in about two hours.
+               (that's why this program sucks so bad.)
+               Over time, hack upon hack, stuff was added to handle
+               printouts, CD control (WHY THE HELL?), different ports,
+               etc.
+
+   120693 1.5  Faster, nicer, less error prone transfers (added
+                  the neat com library...had to try it out!).
+               Realized this was a finite state machine.  Acutally,
+                  has only one real state, so it's very finite.
+               Only supports com1 & com2 now, and command line options
+                  changing of the IO port is "temporarily unavailable",
+                  though it still must be specified WHAT com port you
+                  are using.  The irq's are compiled in.
+                  (stupid stupid stupid stupid.)
+              Printouts were diabled...(huh? you wanna know why?
+                  so do I, I mean, somebody commented it all out!
+*/
 
 main(int argc, char *argv[]) {
   /* init io ports */
@@ -38,6 +63,7 @@ main(int argc, char *argv[]) {
   outp(0x3d8, 0x28);
 
   if ((port = (ASYNC *)malloc(sizeof(ASYNC))) == NULL) {
+    /*like when the hell is THIS ever going to happen?*/
     printf("Not enough memory\n");
     exit(0);
   }
@@ -76,7 +102,7 @@ main(int argc, char *argv[]) {
 
   AllocRingBuffer(port, 1024, 1024, 0);
 
-  if (async_open(port, ioport, IRQ3, VCTR3, "9600N81") != R_OK) {
+  if (async_open(port, ioport, IRQ4, VCTR4, "9600N81") != R_OK) {
     printf("Open Port Failed\n");
     exit(0);
   }
@@ -167,6 +193,9 @@ void dispcga(int which, int how) {
         *(screen + (y * j) + x) = (cga1[0][y][x] << 8) | cga1[1][y][x];
 }
 
+/*can you believe I still use this FUCKING SHYT!!!!*/
+/* I don't.*/
+
 void dispcgaline(int which) {
   int x;
   VIDMEM screen;
@@ -202,6 +231,7 @@ void initdc(void) {
   dispcga(1, QUICK);
 }
 
+/*you know, there's some reason for this being disabled...*/
 void PrintOut(void) {
   /* DON'T EVEN THINK ABOUT IT...YET  FILE *printer;
   int x,y;

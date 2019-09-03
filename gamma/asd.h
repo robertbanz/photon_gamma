@@ -31,6 +31,7 @@
 /* REPET is a fixup for total ANSI (TheDraw & ANSI2ASD) compliance... */
 #define PAGES 26
 #define LSCRL 28
+#define GASDS 29
 
 int ASDInit(char adapter);
 short ASDDeInit(void);

@@ -3,7 +3,7 @@
 /********************/
 /*#define DEBUG*/
 #define SYSTEM_PROGRAM
-#undef COPYRIGHT_PAUSE
+#define COPYRIGHT_PAUSE
 
 /* 060692  Fixed problems with people getting base points in freeforall */
 /* 		  (hey, it only happened in Blowcago with their sucky radio!
@@ -27,19 +27,32 @@
 #define __TOPLEV
 
 #include "gamma.h"
+#include <conio.h>
 #include <dos.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
 #include "asd.h"
+#include "asddat.h"
+#include "asdmenu.h"
 #include "video.h"
+
+extern ASD_COMP ASDcore;
+
+#ifdef EXTENDED_GRAPHICS
+#include "fontop.h"
+#include "g_asd.h"
+#endif
+
 #define CRED 4
 /*GLOBAL FOR USE ONLY IN POLL !*/
 struct com_5 poll_c5;
 
 void(interrupt far *oldtimer)(void);
-
-/*Just guess this one.*/
+#ifdef EXTENDED_GRAPHICS
+void init_fonts(void);
+#endif
 
 main(int argc, char **argv) {
   int i, j;
@@ -69,7 +82,11 @@ main(int argc, char **argv) {
   for (i = 0; i < 0xff; ++i) slotir[i] = 0;
   for (i = 0; i < 21; ++i)
     for (j = 0; j < 4; ++j) irslot[i][j] = 0;
-  /**********************************/
+      /**********************************/
+
+#ifdef EXTENDED_GRAPHICS
+  init_fonts();
+#endif
 
   if (ASDInit(FINDADAPTER | CO40)) {
     printf("Error initializing video system.\n");
@@ -94,6 +111,7 @@ main(int argc, char **argv) {
 #ifdef COPYRIGHT_PAUSE
   while (!kbhit())
     ;
+  getch();
 #endif
 
   loadconfig("system.ini"); /*load default configuration*/
@@ -112,13 +130,11 @@ main(int argc, char **argv) {
 
   SetupMonoIdle(0); /*setup monitor screen*/
 
-  info("-Init IRSLOT");
   setupslots(); /*initialize irslot & slotir arrays*/
 
   info("-Init Hostess IO ports");
   setuphostess(); /*initialize hostess ports*/
 
-  info("-Init PODID");
   SetupPodId(); /*initialize sig->id id->sig arrays*/
 
   info("-Install INT24 handler");
@@ -154,9 +170,18 @@ main(int argc, char **argv) {
     effectsout("\rLOAD M\rRU50\r", 13);
   }
 
+#ifndef EXTENDED_GRAPHICS
   vPage(0);
   vStatLine("ESTABLISHING ET COMMUNICATIONS", 3, COLOR(BLK, WHT), 1);
   vPage(1);
+#else
+  sxColorSelect(0, 0);
+  sxFontSelect(0);
+  sprintf(ts, "ET1:%d, ET2:%d", ET1, ET2);
+  sxPrintText(CEN, FBOT | 2, ts);
+  sxPrintText(CEN, FBOT | 1, "Establishing ET Communications");
+  vPage(1);
+#endif
 
   info("-Initialize Et's");
   ConfigEts(FALSE); /*configure entry terminals*/
@@ -164,10 +189,12 @@ main(int argc, char **argv) {
   info("Stop/Pause CD PLAYER");
   CD_stop(); /*reset CD player*/
   CD_pause();
+  /*
+          memset(textinfo[0], 0, 40 * 10);
+  */
+  /*clrcga();*/
+  printf("it is: %d", ASDcore.ASDsafe);
 
-  for (i = 0; i < 10; ++i) /*clear textinfo array*/
-    for (j = 0; j < 40; ++j) textinfo[i][j] = 0;
-  clrcga();            /*clear display*/
   setupcga(TWEENTEXT); /*display 'tween screen*/
 
   sent = TRUE; /*default sent to be true*/
@@ -178,6 +205,19 @@ main(int argc, char **argv) {
   return (0);
 }
 struct gamerec rec;
+
+#ifdef EXTENDED_GRAPHICS
+void init_fonts(void) {
+  extern struct fctl_t fontcontrol;
+  struct fctl_t control;
+
+  control.fonts[0] = "t'tms rmn'h32w16b";
+  control.fonts[1] = "t'tms rmn'h16w16b";
+  control.fonts[2] = "t'tms rmn'h8w16b";
+
+  fn_init(control);
+}
+#endif
 
 void LoadWeeklyInfo(char *filename) {
   FILE *indata;
@@ -223,8 +263,9 @@ void LoadFakeGame(char *name) {
   memcpy(&game, &rec.game, sizeof(struct gamestruct));
   game.number = i;
   for (i = 1; i < 41; ++i) {
-    memcpy(player[i].name, rec.player[i - 1].name, 10);
-    if (rec.player[i - 1].used) memcpy(player[i].passport, "0000000010", 10);
+    memcpy((void *)player[i].name, rec.player[i - 1].name, 10);
+    if (rec.player[i - 1].used)
+      memcpy((void *)player[i].passport, "0000000010", 10);
   }
 
   ItsFake = 1;
@@ -238,8 +279,8 @@ void InitGameData(void) {
   for (l = 0; l < 40; ++l) /*clear player records from prev. game*/
   {
     player[l].used = FALSE;
-    memset(player[l].passport, 32, 10);
-    memset(player[l].name, 32, 10);
+    memset((void *)player[l].passport, 32, 10);
+    memset((void *)player[l].name, 32, 10);
     player[l].score = 0;
   }
 
@@ -436,11 +477,14 @@ AfterReConfig: /*Re-entrance if a ctrl=r is done...*/
     if (!noxfer) {
       if (curtime.minute != minute) {
         minute = curtime.minute;
+#ifndef EXTENDED_GRAPHICS
         vPage(0);
         vChangeAttr(COLOR(BLK, WHT));
         vPosCur(4, 22);
         sprintf(ts, "%2d:%02d", (int)curtime.hour, (int)curtime.minute);
         v_sends(ts);
+#else
+#endif
         if (two_count) {
           two_count = 0;
           PrintMessage(++tnum);
@@ -634,10 +678,11 @@ void CheckForHighScores(void) {
     if (player[i].passport[0] != ' ') {
       if ((weekly.highscore.passport[0] == 0) ||
           (player[i].score > weekly.highscore.score))
-        memcpy(&weekly.highscore, &player[i], sizeof(struct playertype));
+        memcpy(&weekly.highscore, (void *)&player[i],
+               sizeof(struct playertype));
       if ((weekly.highhits.passport[0] == 0) ||
           (player[i].hits > weekly.highhits.hits))
-        memcpy(&weekly.highhits, &player[i], sizeof(struct playertype));
+        memcpy(&weekly.highhits, (void *)&player[i], sizeof(struct playertype));
     }
     ++i;
   }
@@ -671,6 +716,7 @@ void rungame(void) {
 
   /*notify lobby of impending game start*/
   setupcga(ALRTSCRN);
+
   if (curconfig.pc) charout(PC, 0xE7);
 
   /*syncronize watches!*/
@@ -780,7 +826,7 @@ void rungame(void) {
 
       /* download data to the PC*/
       if (curconfig.pc == TRUE) {
-        outp(PC, 0xE4);
+        charout(PC, 0xE4);
         for (l = 5; l < 25; ++l) {
           if ((npoll[l] != 0x00) && (npoll[l] < 0xE0))
             charout(PC, npoll[l]);
@@ -874,8 +920,8 @@ void rungame(void) {
       HOST_sendsn(PC, &curtime, sizeof(curtime));
       HOST_sendsn(PC, &curdate, sizeof(curdate));
       for (l = 1; l < 41; ++l) {
-        HOST_sendsn(PC, &player[l].score, sizeof(int));
-        HOST_sendsn(PC, &pod[l], sizeof(struct podstruct));
+        HOST_sendsn(PC, (void *)&player[l].score, sizeof(int));
+        HOST_sendsn(PC, (void *)&pod[l], sizeof(struct podstruct));
       }
       HOST_sendsn(PC, &game, sizeof(struct gamestruct));
       info("Data Done!");
@@ -1197,8 +1243,7 @@ void SortScores() {
       rankplayer[k] = temp;
     }
   }
-  if (game.field == 2) /*For TWO Fields*/
-  {
+  if (game.field == 2) {
     for (i = 1; i < 2 * players[RED][0]; i += 2) {
       k = i;
       for (j = i + 2; j <= 2 * players[RED][0]; j += 2)
@@ -1329,10 +1374,8 @@ void TranslateXfer(unsigned int et) {
       else if (game.mode1 == PUBLIC)
         game.hcp_a = curconfig.pub_hcp;
       game.length = curconfig.length;
-      for (m = 0; m < 10; ++m) {
-        game.redtm1[m] = curconfig.beta_red[m];
-        game.grntm1[m] = curconfig.beta_grn[m];
-      }
+      memcpy(game.redtm1, curconfig.beta_red, 10);
+      memcpy(game.grntm1, curconfig.beta_grn, 10);
       GetRedTeam(FALSE, BOTH);
       GetGrnTeam(FALSE, BOTH);
     } else {
@@ -1352,10 +1395,8 @@ void TranslateXfer(unsigned int et) {
       else if (game.mode1 == PUBLIC)
         game.hcp_a = curconfig.pub_hcp;
       game.length = curconfig.length;
-      for (m = 0; m < 10; ++m) {
-        game.redtm1[m] = curconfig.beta_red[m];
-        game.grntm1[m] = curconfig.beta_grn[m];
-      }
+      memcpy(game.redtm1, curconfig.beta_red, 10);
+      memcpy(game.grntm1, curconfig.beta_grn, 10);
       GetRedTeam(FALSE, BOTH);
     } else {
       game.hcp_a = curconfig.lea_hcp;
@@ -1373,10 +1414,8 @@ void TranslateXfer(unsigned int et) {
       else if (game.mode1 == PUBLIC)
         game.hcp_a = curconfig.pub_hcp;
       game.length = curconfig.length;
-      for (m = 0; m < 10; ++m) {
-        game.redtm1[m] = curconfig.beta_red[m];
-        game.grntm1[m] = curconfig.beta_grn[m];
-      }
+      memcpy(game.redtm1, curconfig.beta_red, 10);
+      memcpy(game.grntm1, curconfig.beta_grn, 10);
       GetGrnTeam(FALSE, GREEN);
     } else {
       game.hcp_a = curconfig.lea_hcp;
@@ -1395,10 +1434,8 @@ void TranslateXfer(unsigned int et) {
       else if (game.mode1 == PUBLIC)
         game.hcp_a = curconfig.pub_hcp;
       game.length = curconfig.length;
-      for (m = 0; m < 10; ++m) {
-        game.redtm1[m] = curconfig.alpha_red[m];
-        game.grntm1[m] = curconfig.alpha_grn[m];
-      }
+      memcpy(game.redtm1, curconfig.alpha_red, 10);
+      memcpy(game.grntm1, curconfig.alpha_grn, 10);
       GetRedTeam(FALSE, ALPHA);
       GetGrnTeam(FALSE, ALPHA);
     } else {
@@ -1421,10 +1458,8 @@ void TranslateXfer(unsigned int et) {
       else if (game.mode2 == PUBLIC)
         game.hcp_b = curconfig.pub_hcp;
       game.length = curconfig.length;
-      for (m = 0; m < 10; ++m) {
-        game.redtm2[m] = curconfig.omega_red[m];
-        game.grntm2[m] = curconfig.omega_grn[m];
-      }
+      memcpy(game.redtm2, curconfig.omega_red, 10);
+      memcpy(game.grntm2, curconfig.omega_grn, 10);
       GetRedTeam(FALSE, OMEGA);
       GetGrnTeam(FALSE, OMEGA);
     } else {
@@ -1435,10 +1470,8 @@ void TranslateXfer(unsigned int et) {
     }
     if (thatet == OFF) {
       game.mode1 = game.mode2;
-      for (m = 0; m < 10; ++m) {
-        game.redtm1[m] = game.redtm2[m];
-        game.grntm1[m] = game.grntm2[m];
-      }
+      memcpy(game.redtm1, game.redtm2, 10);
+      memcpy(game.grntm1, game.grntm2, 10);
     }
   }
   /*dual field, omega*/
@@ -1599,7 +1632,7 @@ byte WaitAck(int prt, int count) {
 #pragma optimize("", on)
 
 HOST_sendsn(unsigned port, char *string, int size) {
-  while (size--) charout(PC, *string++);
+  while (size--) charout(port, *string++);
 }
 
 void ControlBootScreen() {
@@ -1634,8 +1667,7 @@ void MainLoop() {
   char quit, temp;
   int i, j;
 
-  do /*game loop*/
-  {
+  do {
     SetupMonoIdle(1); /*resetup monitor screen*/
     info("...Updating setup file");
     if (update_weekly) UpdateWeeklyInfo("system.cur");
@@ -1647,18 +1679,11 @@ void MainLoop() {
       info("-SENT PRINT TO DC");
       charout(DC, 0xE7);
       charout(DC, 0xE4); /*SEND TO DC GO-AND-PRINT*/
-
-#ifdef DEBUG
-      info(" Awaiting Acknowledge");
-#endif
       WaitAck(DC, 4);
-#ifdef DEBUG
-      info(" ...Acknlowledge Rec'd");
-#endif
     }
     for (i = 1; i <= 42; ++i) { /*de-allocate slots*/
       player[i].passport[0] = 32;
-      memset(player[i].name, 32, 15);
+      memset((void *)player[i].name, 32, 15);
     }
     for (i = 1; i <= 40; ++i) /*initialize pod performance*/
     {
@@ -1686,14 +1711,17 @@ void MainLoop() {
       vPage(1);
       if ((badradio < 30) && (ctrl_e == FALSE))
         WritePodPerform(); /*write pod performance*/
+      else
+        info("POD PERFORMANCE NOT BEING SAVED !");
       if ((ctrl_e == FALSE) && (curconfig.savedata))
         WriteGmData(); /*write game data*/
+      else
+        info("GAME DATA NOT BEING SAVED !");
       if (curconfig.dc)
         SendToDC(); /*transfer*/
       else
         sent = FALSE;
-      if (sent == TRUE) /*if transfer successful ...*/
-      {
+      if (sent == TRUE) {
         clrcga();
         setupcga(TWEENTEXT);
         noxfer = 0;

@@ -1,6 +1,6 @@
-/**********
+/***********
   podperf.c
-  *********/
+************/
 
 #define SYSTEM_PROGRAM
 #include <dos.h>

@@ -15,9 +15,9 @@ LINKER	= link
 ILINK  = ilink
 LRF  = echo > NUL
 
-OBJS_EXT  = VIDEOD.OBJ
-OBJS  = .\CONFIG.obj .\NEWCONFI.obj .\VIDEO.obj .\ASD.obj .\ASDMENU.obj\
-	$(OBJS_EXT)
+OBJS  = .\CONFIG.obj .\NEWCONFI.obj
+LIBS_EXT  = asd.lib
+LIBS  = $(LIBS_EXT)
 
 all: .\$(PROJ).exe
 
@@ -40,29 +40,8 @@ all: .\$(PROJ).exe
 	$(CC) /c $(CFLAGS_G) $(CFLAGS_R) /Fo.\NEWCONFI.obj NEWCONFI.C
 !ENDIF
 
-.\VIDEO.obj : VIDEO.C video.h videodat.h
-!IF $(DEBUG)
-	$(CC) /c $(CFLAGS_G) $(CFLAGS_D) /Fo.\VIDEO.obj VIDEO.C
-!ELSE
-	$(CC) /c $(CFLAGS_G) $(CFLAGS_R) /Fo.\VIDEO.obj VIDEO.C
-!ENDIF
 
-.\ASD.obj : ASD.C video.h asddat.h asd.h
-!IF $(DEBUG)
-	$(CC) /c $(CFLAGS_G) $(CFLAGS_D) /Fo.\ASD.obj ASD.C
-!ELSE
-	$(CC) /c $(CFLAGS_G) $(CFLAGS_R) /Fo.\ASD.obj ASD.C
-!ENDIF
-
-.\ASDMENU.obj : ASDMENU.C asd.h video.h asdmenud.h asdmenu.h
-!IF $(DEBUG)
-	$(CC) /c $(CFLAGS_G) $(CFLAGS_D) /Fo.\ASDMENU.obj ASDMENU.C
-!ELSE
-	$(CC) /c $(CFLAGS_G) $(CFLAGS_R) /Fo.\ASDMENU.obj ASDMENU.C
-!ENDIF
-
-
-.\$(PROJ).exe : $(OBJS)
+.\$(PROJ).exe : $(OBJS) $(LIBS)
 !IF $(DEBUG)
 	$(LRF) @<<.\$(PROJ).lrf
 $(RT_OBJS: = +^

@@ -1,3 +1,4 @@
+
 /***********
  gamma.h
 ************/
@@ -229,9 +230,7 @@ struct gamerec {
   struct pc_playerinfo player[40];
   byte GameData[360][40];
 };
-
 #pragma pack()
-
 struct com_5 {
   unsigned DR : 1;
   unsigned OE : 1;
@@ -317,4 +316,33 @@ struct date {
 #endif
 
 #include "phoproto.h"
+main(int, char **);
+void init_fonts(void);
+void LoadWeeklyInfo(char *);
+void UpdateWeeklyInfo(char *);
+void LoadFakeGame(char *);
+void InitGameData(void);
+byte handle_pregame(void);
+void SetupPlayerData(void);
+byte game_dokeyboard(void);
+void CheckForHighScores(void);
+void rungame(void);
+void interrupt far poll();
+void loadconfig(char *);
+void processpoll_f(void);
+byte putdown(byte);
+void SortScores(void);
+void doscores(void);
+void SendToDC(void);
+void WaitAPoll(void);
+void TranslateXfer(unsigned int);
+void ResetIBM(void);
+void WritePodPerform(void);
+void IncTime(void);
+void IncDate(void);
+void WriteGmData(void);
+byte WaitAck(int, int);
+HOST_sendsn(unsigned, void *, int);
+void ControlBootScreen(void);
+void MainLoop(void);
 
