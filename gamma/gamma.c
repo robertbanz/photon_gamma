@@ -187,7 +187,11 @@ main(int argc, char **argv) {
   ConfigEts(FALSE); /*configure entry terminals*/
 
   info("Stop/Pause CD PLAYER");
+  vStatLine("CD RESET", 3, COLOR(BLK, WHT), 1);
+  CD_reset();
+  vStatLine("CD STOP", 3, COLOR(BLK, WHT), 1);
   CD_stop(); /*reset CD player*/
+  vStatLine("CD PAUSE", 3, COLOR(BLK, WHT), 1);
   CD_pause();
   /*
           memset(textinfo[0], 0, 40 * 10);
@@ -763,7 +767,9 @@ void rungame(void) {
       /*START CD player*/
       if ((timeremain <= 19) && (cdf == FALSE)) {
         cdf = TRUE;
-        CD_pause();
+        /*this would be cd_pause if we still used the lame
+            cd remote*/
+        CD_play();
         info("Sent start to CD");
 
         /*make sure PC is ready!*/
@@ -1107,13 +1113,13 @@ void processpoll_f(void) {
         ++pod[slotnum].base;
         if ((color == RED) & (player[slotnum].baseflag == 0)) {
           player[slotnum].baseflag = 1;
-          player[slotnum].score = player[slotnum].score + 200;
+          player[slotnum].score = player[slotnum].score + 500;
         }
       } else if ((value == 0x35) && (gameslot != FREEFORALL)) {
         ++pod[slotnum].base;
         if ((color == GREEN) & (player[slotnum].baseflag == 0)) {
           player[slotnum].baseflag = 1;
-          player[slotnum].score = player[slotnum].score + 200;
+          player[slotnum].score = player[slotnum].score + 500;
         }
       }
       /* HIT OWN PLAYER */
@@ -1158,7 +1164,7 @@ void processpoll_f(void) {
             if (slotir[value] <= 40) {
               ++pod[slotir[value]].hitsent;
               ++player[slotir[value]].gethit;
-              player[slotnum].score += 10;
+              player[slotnum].score += 50;
               ++pod[slotnum].valcode;
               ++player[slotnum].hits;
               if (slotir[value] % 2 ==

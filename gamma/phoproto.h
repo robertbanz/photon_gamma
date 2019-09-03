@@ -76,3 +76,4 @@ void CD_pause(void);
 void CD_clear(void);
 void CD_stop(void);
 void CD_time(void);
+void CD_reset(void);
