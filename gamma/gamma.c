@@ -377,7 +377,7 @@ AfterReConfig: /*Re-entrance if a ctrl=r is done...*/
     /*Check ET#1*/
     if (Eta < 4) /*if et1 hasn't started*/
     {
-      ET_CheckDrop(ET1);
+      if (curconfig.etfake != 1) ET_CheckDrop(ET1);
       ReadPort(ET1 + 5, &status);
       if (status.DR == 1) /*if there is a character to read*/
       {
@@ -412,7 +412,7 @@ AfterReConfig: /*Re-entrance if a ctrl=r is done...*/
     }
     if (Etb < 4) /*same as previous routine*/
     {
-      ET_CheckDrop(ET2);
+      if (curconfig.etfake != 2) ET_CheckDrop(ET2);
       ReadPort(ET2 + 5, &status);
       if (status.DR == 1) {
         recd1 = inp(ET2);
@@ -1321,11 +1321,12 @@ void SendToDC(void) {
          ++m) /*Send it...wait for a response after each character!*/
     {
       charout(DC, buffer[m]);
-      if (WaitAck(DC, 4) == -1) {
-        info("!DC TIMEOUT ON CHARTX");
-        EFLAG = TRUE;
-        goto byeloop;
-      }
+      /*if (WaitAck(DC,4)==-1)
+      {
+              info ("!DC TIMEOUT ON CHARTX");
+              EFLAG= TRUE;
+              goto byeloop;
+      }*/
     }
   byeloop:
     if (EFLAG == FALSE) {
@@ -1688,16 +1689,19 @@ void MainLoop() {
     info(" ");
     info("Sending track to CD & Effects");
     SelectTrack(0); /*pick game track*/
-    info("-SENT PRINT TO DC");
-    charout(DC, 0xE7);
-    charout(DC, 0xE4); /*SEND TO DC GO-AND-PRINT*/
+    if (curconfig.dc) {
+      info("-SENT PRINT TO DC");
+      charout(DC, 0xE7);
+      charout(DC, 0xE4); /*SEND TO DC GO-AND-PRINT*/
+
 #ifdef DEBUG
-    info(" Awaiting Acknowledge");
+      info(" Awaiting Acknowledge");
 #endif
-    WaitAck(DC, 4);
+      WaitAck(DC, 4);
 #ifdef DEBUG
-    info(" ...Acknlowledge Rec'd");
+      info(" ...Acknlowledge Rec'd");
 #endif
+    }
     for (i = 1; i <= 42; ++i) /*de-allocate slots*/
       player[i].passport[0] = 32;
     for (i = 1; i <= 40; ++i) /*initialize pod performance*/

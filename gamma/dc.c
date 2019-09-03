@@ -9,6 +9,8 @@
 #include <dos.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include "..\comm\comm.h"
+
 byte cga1[2][25][41];
 
 void initdc(void);
@@ -17,6 +19,7 @@ void PrintOut(void);
 
 main(int argc, char *argv[]) {
   /* init io ports */
+  ASYNC *port;
   FILE *printer;
   char count = FALSE;
   char ts[41];
@@ -33,6 +36,11 @@ main(int argc, char *argv[]) {
   int ioport;
   outp(0x3d9, 0x11);
   outp(0x3d8, 0x28);
+
+  if ((port = (ASYNC *)malloc(sizeof(ASYNC))) == NULL) {
+    printf("Not enough memory\n");
+    exit(0);
+  }
 
   if (argc != 3) {
     printf("Too Few/Too Many arguements\n");
@@ -65,13 +73,14 @@ main(int argc, char *argv[]) {
   CGA_hidecursor();
   clrcga();
   dispcga(1, QUICK);
-  outp(GC + 3, SETBAUD);
-  outp(GC, 0xc); /*0x30*/
-  outp(GC + 1, 0x00);
-  outp(GC + 3, SEND8n1);
-  outp(GC + 1, 1);
-  l = inp(GC);
-  l = 0;
+
+  AllocRingBuffer(port, 1024, 1024, 0);
+
+  if (async_open(port, ioport, IRQ3, VCTR3, "9600N81") != R_OK) {
+    printf("Open Port Failed\n");
+    exit(0);
+  }
+
   initflag = FALSE;
   buffer = malloc(2051);
   printon = TRUE;
@@ -93,44 +102,44 @@ main(int argc, char *argv[]) {
           break;
       }
     }
-    if (inp(GC + 2) == 4) {
-      n = inp(GC);
+    if (async_rxcnt(port)) {
+      n = async_rx(port);
       if (n == 0xF5) {
         initdc();
         l = 0;
-        outp(GC, 0xF5);
+        async_tx(port, 0xF5);
       } else if (n == 0xE1) {
         l = 0;
 
         clrcga();
         dispcga(1, QUICK);
-        outp(GC, 0xE2);
+        async_tx(port, 0xE2);
         count = TRUE;
 
       } else if (n == 0xF7) {
-        outp(GC, 0xF7);
-        while (inp(GC + 2) != 4)
+        async_tx(port, 0xF7);
+        while (!async_rxcnt(port))
           ;
-        n = inp(GC);
+        n = async_rx(port);
         outp(0x200, n);
-        outp(GC, n);
+        async_tx(port, n);
 
       } else if (n == 0xE4) {
         if (printall == TRUE) PrintOut();
-        outp(GC, 0xe4);
+        async_tx(port, 0xe4);
       } else if (n == 0xE6) {
         printon = FALSE;
-        outp(GC, 0xE6);
+        async_tx(port, 0xE6);
       } else if (n == 0xE7) {
         printon = TRUE;
-        outp(GC, 0xE7);
+        async_tx(port, 0xE7);
       } else {
         if ((count == TRUE) && ((l % 50) == 0)) {
           sprintf(&cga1[1][23][3], "%4d", l);
           dispcgaline(23);
         }
         buffer[l] = n;
-        outp(GC, l);
+        /*async_tx(port,l);*/
         ++l;
       }
       if (l == 2000) {
@@ -139,7 +148,7 @@ main(int argc, char *argv[]) {
         omar = (MEM)CGAMEM;
         for (l = 0; l < 2000; ++l) *(omar++) = buffer[l];
         l = 0;
-        outp(GC, 0xE3);
+        async_tx(port, 0xE3);
       }
     }
   }

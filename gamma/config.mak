@@ -1,5 +1,5 @@
-PROJ = CONFIG
-PROJFILE = CONFIG.MAK
+PROJ = config
+PROJFILE = config.mak
 DEBUG = 0
 
 CC  = cl
@@ -11,60 +11,60 @@ MAPFILE_R  = NUL
 LFLAGS_G  = /NOI /BATCH
 LFLAGS_D  = /CO /INC /FAR /PACKC
 LFLAGS_R  = /EXE /FAR /PACKC
-LINKER  = link
+LINKER	= link
 ILINK  = ilink
 LRF  = echo > NUL
 
 OBJS_EXT  = VIDEOD.OBJ
-OBJS	= .\ASD.obj .\ASDMENU.obj .\CONFIG.obj .\NEWCONFI.obj .\VIDEO.obj\
-		  $(OBJS_EXT)
+OBJS  = .\CONFIG.obj .\NEWCONFI.obj .\VIDEO.obj .\ASD.obj .\ASDMENU.obj\
+	$(OBJS_EXT)
 
 all: .\$(PROJ).exe
 
 .SUFFIXES:
 .SUFFIXES: .obj .c
 
-.\ASD.obj : ASD.C video.h asddat.h asd.h
-!IF $(DEBUG)
-		  $(CC) /c $(CFLAGS_G) $(CFLAGS_D) /Fo.\ASD.obj ASD.C
-!ELSE
-		  $(CC) /c $(CFLAGS_G) $(CFLAGS_R) /Fo.\ASD.obj ASD.C
-!ENDIF
-
-.\ASDMENU.obj : ASDMENU.C asd.h video.h asdmenud.h asdmenu.h
-!IF $(DEBUG)
-		  $(CC) /c $(CFLAGS_G) $(CFLAGS_D) /Fo.\ASDMENU.obj ASDMENU.C
-!ELSE
-		  $(CC) /c $(CFLAGS_G) $(CFLAGS_R) /Fo.\ASDMENU.obj ASDMENU.C
-!ENDIF
-
 .\CONFIG.obj : CONFIG.C gamma.h asd.h asdmenu.h video.h videodat.h photon.h\
-		  phoproto.h
+	phoproto.h
 !IF $(DEBUG)
-		  $(CC) /c $(CFLAGS_G) $(CFLAGS_D) /Fo.\CONFIG.obj CONFIG.C
+	$(CC) /c $(CFLAGS_G) $(CFLAGS_D) /Fo.\CONFIG.obj CONFIG.C
 !ELSE
-		  $(CC) /c $(CFLAGS_G) $(CFLAGS_R) /Fo.\CONFIG.obj CONFIG.C
+	$(CC) /c $(CFLAGS_G) $(CFLAGS_R) /Fo.\CONFIG.obj CONFIG.C
 !ENDIF
 
 .\NEWCONFI.obj : NEWCONFI.C gamma.h asd.h asdmenu.h video.h photon.h\
-		  phoproto.h
+	phoproto.h
 !IF $(DEBUG)
-		  $(CC) /c $(CFLAGS_G) $(CFLAGS_D) /Fo.\NEWCONFI.obj NEWCONFI.C
+	$(CC) /c $(CFLAGS_G) $(CFLAGS_D) /Fo.\NEWCONFI.obj NEWCONFI.C
 !ELSE
-		  $(CC) /c $(CFLAGS_G) $(CFLAGS_R) /Fo.\NEWCONFI.obj NEWCONFI.C
+	$(CC) /c $(CFLAGS_G) $(CFLAGS_R) /Fo.\NEWCONFI.obj NEWCONFI.C
 !ENDIF
 
 .\VIDEO.obj : VIDEO.C video.h videodat.h
 !IF $(DEBUG)
-		  $(CC) /c $(CFLAGS_G) $(CFLAGS_D) /Fo.\VIDEO.obj VIDEO.C
+	$(CC) /c $(CFLAGS_G) $(CFLAGS_D) /Fo.\VIDEO.obj VIDEO.C
 !ELSE
-		  $(CC) /c $(CFLAGS_G) $(CFLAGS_R) /Fo.\VIDEO.obj VIDEO.C
+	$(CC) /c $(CFLAGS_G) $(CFLAGS_R) /Fo.\VIDEO.obj VIDEO.C
+!ENDIF
+
+.\ASD.obj : ASD.C video.h asddat.h asd.h
+!IF $(DEBUG)
+	$(CC) /c $(CFLAGS_G) $(CFLAGS_D) /Fo.\ASD.obj ASD.C
+!ELSE
+	$(CC) /c $(CFLAGS_G) $(CFLAGS_R) /Fo.\ASD.obj ASD.C
+!ENDIF
+
+.\ASDMENU.obj : ASDMENU.C asd.h video.h asdmenud.h asdmenu.h
+!IF $(DEBUG)
+	$(CC) /c $(CFLAGS_G) $(CFLAGS_D) /Fo.\ASDMENU.obj ASDMENU.C
+!ELSE
+	$(CC) /c $(CFLAGS_G) $(CFLAGS_R) /Fo.\ASDMENU.obj ASDMENU.C
 !ENDIF
 
 
 .\$(PROJ).exe : $(OBJS)
 !IF $(DEBUG)
-		  $(LRF) @<<.\$(PROJ).lrf
+	$(LRF) @<<.\$(PROJ).lrf
 $(RT_OBJS: = +^
 ) $(OBJS: = +^
 )
@@ -79,7 +79,7 @@ $(LIBS: = +^
 $(DEF_FILE) $(LFLAGS_G) $(LFLAGS_D);
 <<
 !ELSE
-		  $(LRF) @<<.\$(PROJ).lrf
+	$(LRF) @<<.\$(PROJ).lrf
 $(RT_OBJS: = +^
 ) $(OBJS: = +^
 )
@@ -95,22 +95,22 @@ $(DEF_FILE) $(LFLAGS_G) $(LFLAGS_R);
 <<
 !ENDIF
 !IF $(DEBUG)
-		  $(ILINK) -a -e "$(LINKER) @.\$(PROJ).lrf" $@
+	$(ILINK) -a -e "$(LINKER) @.\$(PROJ).lrf" $@
 !ELSE
-		  $(LINKER) @.\$(PROJ).lrf
+	$(LINKER) @.\$(PROJ).lrf
 !ENDIF
 
 
 .c.obj :
 !IF $(DEBUG)
-		  $(CC) /c $(CFLAGS_G) $(CFLAGS_D) /Fo$@ $<
+	$(CC) /c $(CFLAGS_G) $(CFLAGS_D) /Fo$@ $<
 !ELSE
-		  $(CC) /c $(CFLAGS_G) $(CFLAGS_R) /Fo$@ $<
+	$(CC) /c $(CFLAGS_G) $(CFLAGS_R) /Fo$@ $<
 !ENDIF
 
 
 run: .\$(PROJ).exe
-		  .\$(PROJ).exe $(RUNFLAGS)
+	.\$(PROJ).exe $(RUNFLAGS)
 
 debug: .\$(PROJ).exe
-		  CV $(CVFLAGS) .\$(PROJ).exe $(RUNFLAGS)
+	CV $(CVFLAGS) .\$(PROJ).exe $(RUNFLAGS)

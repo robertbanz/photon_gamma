@@ -2,6 +2,7 @@
  sethost.c
 ************/
 
+#define SYSTEM_PROGRAM
 #include <conio.h>
 #include <dos.h>
 #include "gamma.h"

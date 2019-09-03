@@ -22,6 +22,14 @@ void sys_config(byte configured) {
   curconfig.savedata = newconfig.savedata;
   curconfig.newscr = newconfig.newscr;
 
+  curconfig.pcport = newconfig.pcport;
+  curconfig.dcport = newconfig.dcport;
+  curconfig.psport = newconfig.psport;
+  curconfig.radioport = newconfig.radioport;
+  curconfig.et1port = newconfig.et1port;
+  curconfig.et2port = newconfig.et2port;
+  curconfig.ecport = newconfig.ecport;
+
   if ((newconfig.pc == TRUE) &
       ((newconfig.pc != curconfig.pc) | (configured == FALSE))) {
     outp(PC, 0xE1); /*INIT CHAR FOR PC*/

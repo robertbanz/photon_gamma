@@ -7,14 +7,9 @@
 #define SYSTEMNAME "GAMMA"
 #define SYSTEMDATE "8/5/93"
 
-#define STORENUM "010" /*3*/ /*the photon store #*/
-#define SITENUM "1" /*2*/    /*what location # for that store*/
-#define OPTNUM                                                             \
-  "E2" /*1*/ /*02 means two field, 03 means extended ET, E* means extended \
-                screens*/
-#define LICNUM "A001" /*4*/     /*precursor A means temp, no money*/
-#define REVNUM "083092" /*6*/   /*date of last revision*/
-#define LOCNAME "010 BALTIMORE" /*pretty simple, really!*/
+#define STORENUM "010"  /*3*/
+#define REVNUM "080593" /*6*/
+#define LOCNAME "050 CROFTON, MD"
 
 /*Clock information*/
 #define POLLCLOCKLSB
@@ -56,13 +51,13 @@
 
 /*Hostess information*/
 #define BASEPORT 0x240
-#define RADIO 0x240
-#define ET1 0x2f8
-#define ET2 0x250
-#define DC 0x258
-#define EC 0x260
-#define PC 0x268
-#define PS 0x270
+#define RADIO curconfig.radioport
+#define ET1 curconfig.et1port
+#define ET2 curconfig.et2port
+#define DC curconfig.dcport
+#define EC curconfig.ecport
+#define PC curconfig.pcport
+#define PS curconfig.psport
 #define LSB9600 0xc
 #define MSB9600 0x0
 #define LSB1200 0x60
@@ -177,6 +172,7 @@ struct config {
   byte pcmode;
   int savedata;
   byte newscr;
+  int et1port, et2port, pcport, dcport, ecport, psport, radioport;
 };
 #pragma pack()
 

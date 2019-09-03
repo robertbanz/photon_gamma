@@ -10,6 +10,7 @@
 #include "asd.h"
 #include "asdmenu.h"
 #include "gamma.h"
+#undef RED
 #include "video.h"
 
 int con_main(int);
@@ -37,34 +38,22 @@ void MonoPalette(void) {
 void setupmenu(void) {
   char tempstring[13];
   FILE *fp;
-  mAppendToMenu("Entry Terminals", 0, 0);
-  mAppendToMenu("Progress Computer", 1, 0);
-  mAppendToMenu("Data Computer", 2, 0);
-  mAppendToMenu("Effects Computer", 3, 0);
-  mAppendToMenu("Phasor Stations", 4, 0);
-  mAppendToMenu("CD Track Selection", 5, 0);
-  mAppendToMenu("Field Type", 6, 0);
-  mAppendToMenu("Number of Players", 7, 0);
-  mAppendToMenu("New Screen Level", 8, 0);
-  mAppendToMenu("Beginning Scores", 9, 0);
-  mAppendToMenu("Handicapp Mode", 10, 0);
-  mAppendToMenu("Default Team Names", 11, 0);
-  mAppendToMenu("Game Length", 12, 0);
-  mAppendToMenu("Video Mode [test]", 13, 0);
-  mAppendToMenu("Message File path", 14, 0);
-  mAppendToMenu("Database path", 15, 0);
-  mAppendToMenu("Log File path", 16, 0);
-  mAppendToMenu("Pod Performance Path", 17, 0);
-  mAppendToMenu("CD Player Interface Type", 18, 0);
-  mAppendToMenu("Phantom ET [test]", 19, 0);
-  mAppendToMenu("PC Mode", 20, 0);
-  mAppendToMenu("Game Data Save", 21, 0);
+  mPushMarker();
+  mAppendToMenu("GAME CONFIGURATION", 0, 0);
+  mAppendToMenu("PERHIPHERAL CONFIGURATION", 1, 0);
+  mAppendToMenu("Video Mode", 2, 0);
+  mAppendToMenu("Bad Stuff on Screen", 3, 0);
+  mAppendToMenu("Save Score Data", 4, 0);
+  mAppendToMenu("Save Radio Data", 5, 0);
+  mAppendToMenu("PATHS", 6, 0);
+  mAppendToMenu("ET Test Mode", 7, 0);
   mAppendToMenu("Save and QUIT", 80, 0);
   mPopUpMenu(40, 0, con_main, 0, 0);
 }
 
 int con_hcp(int sel) {
   byte *k;
+  if (sel == pESC) return pESC;
   mPushMarker();
   mAppendToMenu("Handicapp OFF", 0, 0);
   mAppendToMenu("Handicapp ON", 1, 0);
@@ -80,9 +69,12 @@ int con_hcp(int sel) {
       break;
   }
   *k = (byte)mPopUpMenu(20, 12 + sel, NOESC, *k, 0);
+  return 0;
 }
+
 int con_scores(int sel) {
   int *k;
+  if (sel == pESC) return pESC;
   mPushMarker();
   mAppendToMenu("     0", 0, 0);
   mAppendToMenu("  1000", 1000, 0);
@@ -98,28 +90,90 @@ int con_scores(int sel) {
       k = &newconfig.ffa_begin;
       break;
   }
-  *k = mPopUpMenu(20, 12 + sel, NOESC, ((*k == 0 ? 0 : (*k == 1000 ? 1 : (2)))),
-                  0);
+  *k = mPopUpMenu(20, 12 + sel, NOESC, *k == 0 ? 0 : *k == 1000 ? 1 : 2, 0);
+  return 0;
+}
+
+int PortSelection(int o) {
+  int rval;
+  mPushMarker();
+  mAppendToMenu(" COM 1  (0x3f8)", 0x3f8, 0);
+  mAppendToMenu(" COM 2  (0x2f8)", 0x2f8, 0);
+  mAppendToMenu(" COM 3  (0x3e8)", 0x3e8, 0);
+  mAppendToMenu(" COM 4  (0x2e8)", 0x2e8, 0);
+  mAppendToMenu("HOST 1  (0x240)", 0x240, 0);
+  mAppendToMenu("HOST 2  (0x248)", 0x248, 0);
+  mAppendToMenu("HOST 3  (0x250)", 0x250, 0);
+  mAppendToMenu("HOST 4  (0x258)", 0x258, 0);
+  mAppendToMenu("HOST 5  (0x260)", 0x260, 0);
+  mAppendToMenu("HOST 6  (0x268)", 0x268, 0);
+  mAppendToMenu("HOST 7  (0x270)", 0x270, 0);
+  mAppendToMenu("HOST 8  (0x278)", 0x278, 0);
+  mAppendToMenu("INACTIVE", 0, 0);
+  rval = mPopUpMenu(
+      20, 4, 0,
+      (o == 0x3f8)
+          ? 0
+          : (o == 0x2f8)
+                ? 1
+                : (o == 0x3e8)
+                      ? 2
+                      : (o == 0x2e8)
+                            ? 3
+                            : (o == 0x240)
+                                  ? 4
+                                  : (o == 0x248)
+                                        ? 5
+                                        : (o == 0x250)
+                                              ? 6
+                                              : (o == 0x258)
+                                                    ? 7
+                                                    : (o == 0x260)
+                                                          ? 8
+                                                          : (o == 0x268)
+                                                                ? 9
+                                                                : (o == 0x270)
+                                                                      ? 10
+                                                                      : (o ==
+                                                                         0x278)
+                                                                            ? 11
+                                                                            : (o ==
+                                                                               0)
+                                                                                  ? 12
+                                                                                  : 12,
+      0);
+
+  return rval;
 }
 
 int con_et(int sel) {
-  mPushMarker();
-  mAppendToMenu("Off", 0, 0);
-  if (newconfig.field == 1) {
-    mAppendToMenu("Red Team", 1, 0);
-    mAppendToMenu("Green Team", 2, 0);
-    mAppendToMenu("Both Teams", 4, 0);
+  if (sel == pESC) return pESC;
+  if (sel == 2) {
+    newconfig.et1port = PortSelection(newconfig.et1port);
+    if (!newconfig.et1port) newconfig.et1 = 0;
+  } else if (sel == 3) {
+    newconfig.et2port = PortSelection(newconfig.et2port);
+    if (!newconfig.et2port) newconfig.et2 = 0;
   } else {
-    mAppendToMenu("Alpha Field", 1, 0);
-    mAppendToMenu("Omega Field", 2, 0);
+    mPushMarker();
+    mAppendToMenu("Off", 0, 0);
+    if (newconfig.field == 1) {
+      mAppendToMenu("Red Team", 1, 0);
+      mAppendToMenu("Green Team", 2, 0);
+      mAppendToMenu("Both Teams", 4, 0);
+    } else {
+      mAppendToMenu("Alpha Field", 1, 0);
+      mAppendToMenu("Omega Field", 2, 0);
+    }
+    if (sel == 0) {
+      newconfig.et1 =
+          mPopUpMenu(20, 3, NOESC, newconfig.et1 == 4 ? 3 : newconfig.et1, 0);
+    } else if (sel == 1) {
+      newconfig.et2 =
+          mPopUpMenu(20, 4, NOESC, newconfig.et2 == 4 ? 3 : newconfig.et2, 0);
+    }
   }
-  if (sel == 1) {
-    newconfig.et1 =
-        mPopUpMenu(20, 3, NOESC, newconfig.et1 == 4 ? 3 : newconfig.et1, 0);
-  } else if (sel == 2) {
-    newconfig.et2 =
-        mPopUpMenu(20, 4, NOESC, newconfig.et2 == 4 ? 3 : newconfig.et2, 0);
-  }
+  return 0;
 }
 
 int con_names(int sel) {
@@ -136,138 +190,139 @@ int con_names(int sel) {
       mEditString(newconfig.omega_red, "Second Red Team: ", 10, 20, 17);
       mEditString(newconfig.omega_grn, "Second Green Team: ", 10, 20, 17);
       break;
+    case pESC:
+      return pESC;
   }
+  return 0;
 }
 
-int con_main(int sel) {
-  FILE *fp;
-  int rval, flag;
+int con_game(int sel) {
+  int rval;
+
   switch (sel) {
-    case 0:
+    case 0: /*field type*/
       mPushMarker();
-      mAppendToMenu("Entry Terminal 1", 1, 0);
-      mAppendToMenu("Entry Terminal 2", 2, 0);
-      rval = mPopUpMenu(15, 2, con_et, 0, 0);
-      break;
-    case 1:
-      mPushMarker();
-      mAppendToMenu("Progress Computer OFF", OFF, 0);
-      mAppendToMenu("Progress Computer ON", ON, 0);
-      newconfig.pc = (byte)mPopUpMenu(15, 3, NOESC, newconfig.pc, 0);
-      break;
-    case 2:
-      mPushMarker();
-      mAppendToMenu("Data Computer OFF", OFF, 0);
-      mAppendToMenu("Data Computer ON", ON, 0);
-      newconfig.dc = (byte)mPopUpMenu(15, 4, NOESC, newconfig.dc, 0);
-      break;
-    case 3:
-      mPushMarker();
-      mAppendToMenu("Effects Computer OFF", OFF, 0);
-      mAppendToMenu("Effects Computer ON", ON, 0);
-      newconfig.ec = (byte)mPopUpMenu(15, 5, NOESC, newconfig.ec, 0);
-      break;
-    case 4:
-      mPushMarker();
-      mAppendToMenu("Phasor Stations OFF", OFF, 0);
-      mAppendToMenu("Phasor Stations ON", ON, 0);
-      newconfig.ps = (byte)mPopUpMenu(15, 6, NOESC, newconfig.ps, 0);
-      break;
-    case 5:
-      mPushMarker();
-      mAppendToMenu("RANDOM selection", 1, 0);
-      mAppendToMenu("1-5 ORDERED selection", 2, 0);
-      newconfig.cdsel =
-          (byte)mPopUpMenu(15, 7, NOESC, (newconfig.cdsel - 1), 0);
-      break;
-    case 6:
-      mPushMarker();
-      mAppendToMenu("BETA Single Field", 1, 0);
-      mAppendToMenu("ALPHA/OMEGA Dual Field", 2, 0);
+      mAppendToMenu("Single Field", 1, 0);
+      mAppendToMenu("Dual Field", 2, 0);
       newconfig.field =
           (byte)mPopUpMenu(15, 8, NOESC, (newconfig.field - 1), 0);
       break;
-    case 7:
+    case 1: /*Number of Players*/
       mPushMarker();
       mAppendToMenu("8 (16 in game)", 8, 0);
       mAppendToMenu("9 (18 in game)", 9, 0);
       mAppendToMenu("10 (20 in game)", 10, 0);
       if (newconfig.field != 2) {
-        mAppendToMenu("11 (22 in game)  SINGLE ONLY !", 11, 0);
-        mAppendToMenu("12 (24 in game)  SINGLE ONLY !", 12, 0);
-        mAppendToMenu("13 (26 in game)  SINGLE ONLY !", 13, 0);
-        mAppendToMenu("14 (28 in game)  SINGLE ONLY !", 14, 0);
-        mAppendToMenu("15 (30 in game)  SINGLE ONLY !", 15, 0);
-        mAppendToMenu("20 (40 in game)  [Test Version]", 20, 0);
+        mAppendToMenu("11 (22 in game)", 11, 0);
+        mAppendToMenu("12 (24 in game)", 12, 0);
+        mAppendToMenu("13 (26 in game)", 13, 0);
+        mAppendToMenu("14 (28 in game)", 14, 0);
+        mAppendToMenu("15 (30 in game)", 15, 0);
+        mAppendToMenu("20 (40 in game)  [Test Mode]", 20, 0);
       }
       newconfig.players =
           (byte)mPopUpMenu(15, 9, NOESC, (newconfig.players - 8), 0);
       break;
-    case 8:
-      mPushMarker();
-      mAppendToMenu("Never", 0, 0);
-      mAppendToMenu("League & FFA Only", 1, 0);
-      mAppendToMenu("All modes", 2, 0);
-      newconfig.newscr = (byte)mPopUpMenu(15, 10, NOESC, (newconfig.newscr), 0);
-      break;
-    case 9:
+    case 2: /* Beginning Scores*/
+
       mPushMarker();
       mAppendToMenu("Public", 0, 0);
       mAppendToMenu("League", 1, 0);
       mAppendToMenu("Free For All", 2, 0);
       rval = mPopUpMenu(15, 11, con_scores, 0, 0);
+      if (rval == pESC) return pESC;
       break;
-    case 10:
-      mPushMarker();
-      mAppendToMenu("Public", 0, 0);
-      mAppendToMenu("League", 1, 0);
-      mAppendToMenu("Free For All", 2, 0);
-      rval = mPopUpMenu(15, 12, con_hcp, 0, 0);
+    case 3: /*Handicapp Levels*/
+      while (1) {
+        mPushMarker();
+        mAppendToMenu("Public", 0, 0);
+        mAppendToMenu("League", 1, 0);
+        mAppendToMenu("Free For All", 2, 0);
+        rval = mPopUpMenu(15, 12, con_hcp, 0, 0);
+        if (rval == pESC) break;
+      }
       break;
-    case 11:
-      mPushMarker();
-      mAppendToMenu("Singe Field", 0, 0);
-      mAppendToMenu("Dual Field #1", 1, 0);
-      mAppendToMenu("Dual Field #2", 2, 0);
-      rval = mPopUpMenu(15, 13, con_names, 0, 0);
-      break;
-    case 12:
+    case 4: /*Game Length*/
       mPushMarker();
       mAppendToMenu("6 Minutes", 360, 0);
       mAppendToMenu("2 Minutes", 120, 0);
-      mAppendToMenu("10 Seconds", 10, 0);
+      mAppendToMenu("10 Seconds (super quick test mode)", 10, 0);
       mAppendToMenu("15 Minutes", (15 * 60), 0);
-      mAppendToMenu("Custom Time", 1, 0);
+      mAppendToMenu("12 Minutes 45 Seconds (doubler)", (12 * 60) + 45, 0);
+      /*mAppendToMenu("Custom Time",1,0);*/
       newconfig.length = mPopUpMenu(
           15, 14, NOESC,
-          (newconfig.length == 360
-               ? 0
-               : (newconfig.length == 120 ? 1
-                                          : (newconfig.length == 10 ? 2 : 3))),
+          (newconfig.length == 360)
+              ? 0
+              : (newconfig.length == 120)
+                    ? 1
+                    : (newconfig.length == 10)
+                          ? 2
+                          : (newconfig.length == (15 * 60))
+                                ? 3
+                                : (newconfig.length == (12 * 60) + 45) ? 4 : 5,
           0);
+
       break;
-    case 13:
-      mPushMarker();
-      mAppendToMenu("CGA (40 col)", 0, 0);
-      mAppendToMenu("EGA/VGA (80 col)", 1, 0);
-      newconfig.vidmode =
-          (byte)mPopUpMenu(15, 15, NOESC, (int)newconfig.vidmode, 0);
+    case 5: /*default team names*/
+      while (1) {
+        mPushMarker();
+        mAppendToMenu("Singe Field", 0, 0);
+        mAppendToMenu("Dual Field #1", 1, 0);
+        mAppendToMenu("Dual Field #2", 2, 0);
+        rval = mPopUpMenu(15, 13, con_names, 0, 0);
+        if (rval == pESC) break;
+      }
       break;
-    case 14:
-      mEditString(newconfig.mess_path, "Enter Message File Path: ", 10, 15, 16);
+    case pESC:
+      return pESC;
+  }
+  return 0;
+}
+
+int con_perh(int sel) {
+  int rval;
+
+  switch (sel) {
+    case 0:
+    case 1: /*entry terminal*/
+      while (1) {
+        mPushMarker();
+        mAppendToMenu("Terminal Mode", sel, 0);
+        mAppendToMenu("IO Port", 2 + sel, 0);
+        rval = mPopUpMenu(15, 12, con_et, 0, 0);
+        if (rval == pESC) break;
+      }
       break;
-    case 15:
-      mEditString(newconfig.data_path, "Enter Database File Path: ", 10, 15,
-                  17);
+    case 2:
+      newconfig.pcport = PortSelection(newconfig.pcport);
+      if (!newconfig.pcport)
+        newconfig.pc = 0;
+      else
+        newconfig.pc = 1;
       break;
-    case 16:
-      mEditString(newconfig.log_path, "Enter Log File Path: ", 10, 15, 18);
+    case 3:
+      newconfig.dcport = PortSelection(newconfig.dcport);
+      if (!newconfig.dcport)
+        newconfig.dc = 0;
+      else
+        newconfig.dc = 1;
       break;
-    case 17:
-      mEditString(newconfig.pod_path, "Enter Pod Perfomance Path: ", 10, 15,
-                  19);
+    case 4:
+      newconfig.ecport = PortSelection(newconfig.ecport);
+      if (!newconfig.ecport)
+        newconfig.ec = 0;
+      else
+        newconfig.ec = 1;
       break;
-    case 18:
+    case 5:
+      newconfig.psport = PortSelection(newconfig.psport);
+      if (!newconfig.psport)
+        newconfig.ps = 0;
+      else
+        newconfig.ps = 1;
+      break;
+    case 6:
       mPushMarker();
       mAppendToMenu("LPT 0 (Mono Card)", 0x3BC, 0);
       mAppendToMenu("LPT 1 (Normal)", 0x378, 0);
@@ -282,25 +337,112 @@ int con_main(int sel) {
                                  : (newconfig.cdtype == 0x200 ? 2 : 3))),
                      0);
       break;
-    case 19:
-      mPushMarker();
-      mAppendToMenu("None", 0, 0);
-      mAppendToMenu("Entry Terminal 1", 1, 0);
-      mAppendToMenu("Entry Terminal 2", 2, 0);
-      newconfig.etfake = mPopUpMenu(15, 15, NOESC, newconfig.etfake, 0);
+    case 7:
+      newconfig.radioport = PortSelection(newconfig.radioport);
       break;
-    case 20:
+    case pESC:
+      return pESC;
+  }
+  return 0;
+}
+
+int con_paths(int sel) {
+  switch (sel) {
+    case 1:
+      mEditString(newconfig.mess_path, "Enter Message File Path: ", 10, 15, 16);
+      break;
+    case 2:
+      mEditString(newconfig.data_path, "Enter Database File Path: ", 10, 15,
+                  17);
+      break;
+    case 3:
+      mEditString(newconfig.log_path, "Enter Log File Path: ", 10, 15, 18);
+      break;
+    case 4:
+      mEditString(newconfig.pod_path, "Enter Pod Perfomance Path: ", 10, 15,
+                  19);
+      break;
+    case pESC:
+      return pESC;
+  }
+  return 0;
+}
+int con_main(int sel) {
+  FILE *fp;
+  int rval, flag;
+  switch (sel) {
+    case 0:
+      while (1) {
+        mPushMarker();
+        mAppendToMenu("Field Type", 0, 0);
+        mAppendToMenu("Number of Players", 1, 0);
+        mAppendToMenu("Beginning Scores", 2, 0);
+        mAppendToMenu("Handicapp Levels", 3, 0);
+        mAppendToMenu("Game Length", 4, 0);
+        mAppendToMenu("Default Team names", 5, 0);
+        rval = mPopUpMenu(15, 2, con_game, 0, 0);
+        if (rval == pESC) break;
+      }
+      break;
+    case 1:
+      while (1) {
+        mPushMarker();
+        mAppendToMenu("Entry Terminal 1", 0, 0);
+        mAppendToMenu("Entry Terminal 2", 1, 0);
+        mAppendToMenu("Hit By Hit Display", 2, 0);
+        mAppendToMenu("Previous Game Display", 3, 0);
+        mAppendToMenu("Effects Computer", 4, 0);
+        mAppendToMenu("Phasor Stations", 5, 0);
+        mAppendToMenu("CD Player", 6, 0);
+        mAppendToMenu("Central Radio", 7, 0);
+        rval = mPopUpMenu(15, 2, con_perh, 0, 0);
+        if (rval == pESC) break;
+      }
+      break;
+    case 2:
+      mPushMarker();
+      mAppendToMenu("CGA (40 col)", 0, 0);
+      mAppendToMenu("EGA/VGA (80 col)", 1, 0);
+      newconfig.vidmode =
+          (byte)mPopUpMenu(15, 15, NOESC, (int)newconfig.vidmode, 0);
+      break;
+    case 3:
+      mPushMarker();
+      mAppendToMenu("Never Used", 0, 0);
+      mAppendToMenu("League & FFA Only", 1, 0);
+      mAppendToMenu("All Games", 2, 0);
+      newconfig.newscr = (byte)mPopUpMenu(15, 10, NOESC, (newconfig.newscr), 0);
+      break;
+    case 4:
+      mPushMarker();
+      mAppendToMenu("Don't Save Game Scores", 0, 0);
+      mAppendToMenu("Save Game Scores", 1, 0);
+      newconfig.savedata = mPopUpMenu(15, 15, NOESC, newconfig.savedata, 0);
+      break;
+    case 5:
       mPushMarker();
       mAppendToMenu("Don't Save", 0, 0);
       mAppendToMenu("Save League ONLY", 1, 0);
       mAppendToMenu("Save ALL", 2, 0);
       newconfig.pcmode = mPopUpMenu(15, 15, NOESC, newconfig.pcmode, 0);
       break;
-    case 21:
+    case 6:
+      while (1) {
+        mPushMarker();
+        mAppendToMenu("Messages", 0, 0);
+        mAppendToMenu("Game Data", 1, 0);
+        mAppendToMenu("Log File", 2, 0);
+        mAppendToMenu("Player Unit Performance", 3, 0);
+        rval = mPopUpMenu(15, 2, con_paths, 0, 0);
+        if (rval == pESC) break;
+      }
+      break;
+    case 7:
       mPushMarker();
-      mAppendToMenu("Don't Save Game Data", 0, 0);
-      mAppendToMenu("Save Game Data", 1, 0);
-      newconfig.savedata = mPopUpMenu(15, 15, NOESC, newconfig.savedata, 0);
+      mAppendToMenu("None", 0, 0);
+      mAppendToMenu("Entry Terminal 1", 1, 0);
+      mAppendToMenu("Entry Terminal 2", 2, 0);
+      newconfig.etfake = mPopUpMenu(15, 15, NOESC, newconfig.etfake, 0);
       break;
     case pESC:
     case 80:
@@ -327,4 +469,3 @@ int con_main(int sel) {
   }
   return (mLOOP);
 }
-
