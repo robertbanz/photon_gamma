@@ -2,6 +2,7 @@
   podperf.c
   *********/
 
+#define SYSTEM_PROGRAM
 #include <dos.h>
 #include <time.h>
 #include "gamma.h"

@@ -2,7 +2,7 @@
 /*  GAMMA.C	    */
 /********************/
 /*#define DEBUG*/
-
+#define SYSTEM_PROGRAM
 /* 060692  Fixed problems with people getting base points in freeforall */
 /* 		  (hey, it only happened in Blowcago with their sucky radio!
  */
@@ -37,7 +37,8 @@ struct com_5 poll_c5;
 void(interrupt far *oldtimer)(void);
 
 /*Just guess this one.*/
-main() {
+
+main(int argc, char **argv) {
   int i, j;
   char ts[80];
   char quit, temp;
@@ -72,6 +73,8 @@ main() {
     exit(-1);
   }
 
+  MonoCursorOff();
+
   vPage(0);
   vBlinkControl(BLOFF);
   vCursorControl(CUR_HIDDEN);
@@ -89,6 +92,17 @@ main() {
 
   loadconfig("system.ini"); /*load default configuration*/
   sys_config(FALSE);        /*configure*/
+
+  if (argc == 1) {
+    LoadWeeklyInfo("system.cur");
+    update_weekly = 1;
+  } else {
+    LoadWeeklyInfo(0);
+    if (!strcmp("rc", argv[1]))
+      update_weekly = 1;
+    else
+      update_weekly = 0;
+  }
 
   SetupMonoIdle(0); /*setup monitor screen*/
 
@@ -122,8 +136,6 @@ main() {
   info("...successsful");
   outp(0x203, 0x80); /*shut up slave*/
   outp(0x200, 0x20);
-
-  game.number = 1; /*initialize game #*/
 
   if (curconfig.pc == TRUE) {
     info("-Initializing Progress Computer");
@@ -161,6 +173,40 @@ main() {
 }
 struct gamerec rec;
 
+void LoadWeeklyInfo(char *filename) {
+  FILE *indata;
+  if ((filename) && (indata = fopen(filename, "rb")))
+    fread(&weekly, sizeof(weekly), 1, indata);
+  else {
+    weekly.game_number = 1;
+    weekly.highscore.passport[0] = 0;
+    weekly.highhits.passport[0] = 0;
+  }
+  game.number = weekly.game_number;
+  fclose(indata);
+}
+
+void UpdateWeeklyInfo(char *filename) {
+  FILE *indata;
+
+  if (update_weekly != 1) return;
+
+  weekly.game_number = game.number;
+
+  if (indata = fopen(filename, "wb"))
+    fwrite(&weekly, sizeof(weekly), 1, indata);
+  else
+    info("error history file...");
+  fclose(indata);
+}
+
+void MonoCursorOff(void) {
+  outp(0x3b4, 14);
+  outp(0x3b5, 2);
+  outp(0x3b4, 15);
+  outp(0x3b5, 81);
+}
+
 void LoadFakeGame(char *name) {
   FILE *indata;
   char *ts[80];
@@ -174,9 +220,9 @@ void LoadFakeGame(char *name) {
   if (indata == NULL) exit(-1);
 
   fread(&rec, sizeof(struct gamerec), 1, indata);
-
+  i = game.number;
   memcpy(&game, &rec.game, sizeof(struct gamestruct));
-
+  game.number = i;
   for (i = 1; i < 41; ++i) {
     memcpy(player[i].name, rec.player[i - 1].name, 10);
     if (rec.player[i - 1].used) memcpy(player[i].passport, "0000000010", 10);
@@ -607,6 +653,25 @@ byte game_dokeyboard(void) {
   }
   return (view);
 }
+
+void CheckForHighScores(void) {
+  /*just simply scan all player records for possible high scores*/
+
+  int i = 1;
+
+  while (i < 42) {
+    if (player[i].passport[0] != ' ') {
+      if ((weekly.highscore.passport[0] == 0) ||
+          (player[i].score > weekly.highscore.score))
+        memcpy(&weekly.highscore, &player[i], sizeof(struct playertype));
+      if ((weekly.highhits.passport[0] == 0) ||
+          (player[i].hits > weekly.highhits.hits))
+        memcpy(&weekly.highhits, &player[i], sizeof(struct playertype));
+    }
+    ++i;
+  }
+}
+
 void rungame(void) {
   int bs, l, n;
   int sbegin, send;
@@ -863,7 +928,8 @@ void rungame(void) {
   TCEnable = FALSE;
   sync = NSYNC; /*stop sync*/
 
-  ++game.number; /*increment game #*/
+  ++game.number;
+  CheckForHighScores(); /*increment game #*/
   vPage(1);
 }
 
@@ -1240,11 +1306,13 @@ void SendToDC(void) {
     info("   ENQ ANSWERED");
     WaitPoll();
     info("-SENDING DATA TO DC");
+    sprintf(ts, "%2d:%02d - %2d-%02d-%02d", curtime.hour, curtime.minute,
+            curdate.month, curdate.day, curdate.year % 100);
     vPage(0);
-    vStatLine("Completed", 15, COLOR(HWHT, BLU), 1);
-    vPage(1);
+    vStatLine(ts, 25, COLOR(HWHT, BLU), 1);
     omar = vPageMem(0);
     for (m = 0; m < 2000; ++m) buffer[m] = *(omar++);
+
     vPage(0);
     vStatLine(" TRANSMITTING RESULTS TO PLANET EARTH  ", 0, COLOR(HWHT, BLU),
               1);
@@ -1614,6 +1682,8 @@ void MainLoop() {
   do /*game loop*/
   {
     SetupMonoIdle(1); /*resetup monitor screen*/
+    info("...Updating setup file");
+    if (update_weekly) UpdateWeeklyInfo("system.cur");
     info("<<<< NEW GAME >>>>");
     info(" ");
     info("Sending track to CD & Effects");

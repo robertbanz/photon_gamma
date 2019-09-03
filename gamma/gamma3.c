@@ -1,7 +1,7 @@
 /*************
  gamma3.c
  *************/
-
+#define SYSTEM_PROGRAM
 #include <conio.h>
 #include <dos.h>
 #include <stdio.h>
@@ -24,7 +24,6 @@
 
 *************************************/
 
-/*Hey FUCKHEAD.  This function here sucks shit!*/
 void UpdateView(byte view) {
   static byte oldview;
   char ts[90];
@@ -36,8 +35,8 @@ void UpdateView(byte view) {
     switch (view) {
       case 1: /*REAL TIME POD PERFORMANCE*/ /*RED TEAM*/
       case 6:                               /*GREEN TEAM*/
-        for (y = 12; y < 25; ++y)
-          for (x = 0; x < 80; ++x) mono(0, y, x) = 32;
+        vPosCur(0, 12);
+        vBox(0xffff, ' ', 80, 12);
         vPosCur(0, 12);
         v_printf(
             " ID -----------³RX STAT³TX STAT³HITS---º ID -----------³RX "
@@ -48,8 +47,8 @@ void UpdateView(byte view) {
             "RXB³TXM TXB³SNT ACKº");
         break;
       case 2: /*RADIO VIEW*/
-        for (y = 12; y < 25; ++y)
-          for (x = 0; x < 80; ++x) mono(0, y, x) = 32;
+        vPosCur(0, 12);
+        vBox(0xffff, ' ', 80, 12);
         vPosCur(0, 12);
         v_printf(
             "    1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20");
@@ -63,48 +62,60 @@ void UpdateView(byte view) {
         v_printf("gTX");
         break;
       case 3: /*SCORE VIEW*/
-        for (y = 12; y < 25; ++y)
-          for (x = 0; x < 80; ++x) mono(0, y, x) = 32;
+        vPosCur(0, 12);
+        vBox(0xffff, ' ', 80, 12);
         if (curconfig.field == 2)
-          for (z = 0; z < 10; ++z)
-            for (x = 0; x < 10; ++x) {
-              mono(0, z + 12, x) = player[z * 2 + 1].name[x];
-              mono(0, z + 12, x + 20) = player[z * 2 + 21].name[x];
-              mono(0, z + 12, x + 40) = player[z * 2 + 2].name[x];
-              mono(0, z + 12, x + 60) = player[z * 2 + 22].name[x];
-            }
+          for (z = 0; z < 10; ++z) {
+            vPosCur(0, z + 12);
+            v_sendsn(player[z * 2 + 1].name, 10);
+            vPosCur(20, z + 12);
+            v_sendsn(player[z * 2 + 21].name, 10);
+            vPosCur(40, z + 12);
+            v_sendsn(player[z * 2 + 2].name, 10);
+            vPosCur(60, z + 12);
+            v_sendsn(player[z * 2 + 22].name, 10);
+          }
         else
-          for (z = 0; z < 10; ++z)
-            for (x = 0; x < 10; ++x) {
-              mono(0, z + 12, x) = player[z + 1].name[x];
-              mono(0, z + 12, x + 20) = player[z + 11].name[x];
-              mono(0, z + 12, x + 40) = player[z + 21].name[x];
-              mono(0, z + 12, x + 60) = player[z + 31].name[x];
-            }
+          for (z = 0; z < 10; ++z) {
+            vPosCur(0, z + 12);
+            v_sendsn(player[z + 1].name, 10);
+            vPosCur(20, z + 12);
+            v_sendsn(player[z + 11].name, 10);
+            vPosCur(40, z + 12);
+            v_sendsn(player[z + 21].name, 10);
+            vPosCur(60, z + 12);
+            v_sendsn(player[z + 31].name, 10);
+          }
         break;
       case 5:
-        for (y = 12; y < 25; ++y)
-          for (x = 0; x < 80; ++x) mono(0, y, x) = 32;
+        vPosCur(0, 12);
+        vBox(0xffff, ' ', 80, 12);
         if (curconfig.field == 2)
-          for (z = 0; z < 10; ++z)
-            for (x = 0; x < 10; ++x) {
-              mono(0, z + 12, x) = player[z * 2 + 1].passport[x];
-              mono(0, z + 12, x + 20) = player[z * 2 + 21].passport[x];
-              mono(0, z + 12, x + 40) = player[z * 2 + 2].passport[x];
-              mono(0, z + 12, x + 60) = player[z * 2 + 22].passport[x];
-            }
+          for (z = 0; z < 10; ++z) {
+            vPosCur(0, z + 12);
+            v_sendsn(player[z * 2 + 1].passport, 10);
+            vPosCur(20, z + 12);
+            v_sendsn(player[z * 2 + 21].passport, 10);
+            vPosCur(40, z + 12);
+            v_sendsn(player[z * 2 + 2].passport, 10);
+            vPosCur(60, z + 12);
+            v_sendsn(player[z * 2 + 22].passport, 10);
+          }
         else
-          for (z = 0; z < 10; ++z)
-            for (x = 0; x < 10; ++x) {
-              mono(0, z + 12, x) = player[z + 1].passport[x];
-              mono(0, z + 12, x + 20) = player[z + 11].passport[x];
-              mono(0, z + 12, x + 40) = player[z + 21].passport[x];
-              mono(0, z + 12, x + 60) = player[z + 31].passport[x];
-            }
+          for (z = 0; z < 10; ++z) {
+            vPosCur(0, z + 12);
+            v_sendsn(player[z + 1].passport, 10);
+            vPosCur(20, z + 12);
+            v_sendsn(player[z + 11].passport, 10);
+            vPosCur(40, z + 12);
+            v_sendsn(player[z + 21].passport, 10);
+            vPosCur(60, z + 12);
+            v_sendsn(player[z + 31].passport, 10);
+          }
         break;
       case 0:
-        for (y = 12; y < 25; ++y)
-          for (x = 0; x < 80; ++x) mono(0, y, x) = 32;
+        vPosCur(0, 12);
+        vBox(0xffff, ' ', 80, 12);
         break;
     }
   } else {
@@ -255,133 +266,113 @@ void DispGameModes2(int row, int mode, char *red, char *grn) {
   }
 }
 
-/*HEY! YOU! FUCKHEAD!  Everything after this line DEFINATLY has to
-  change!  It REALLY blows chunks.  Every freking line of code sucks!*/
-
 void SetupMonoGame(void) {
   char ts[80];
   int i, j, k, l;
-  for (i = 0; i < 25; ++i)
-    for (j = 0; j < 80; ++j) {
-      mono(1, i, j) = NORMAL;
-      mono(0, i, j) = 32;
-    }
-  box1(0, 0, 79, 2);
-  sprintf(ts, "GAMMA SYSTEMS COMPUTER");
-  PrintMono(1, 4, ts);
-  sprintf(ts, "ACTIVE - GAME MODE");
-  PrintMono(1, 60, ts);
-  sprintf(ts, "%s", LOCNAME);
-  PrintMono(3, 4, ts);
-  sprintf(ts, "%s.%s.%s.%s.%s", STORENUM, SITENUM, OPTNUM, LICNUM, REVNUM);
-  PrintMono(3, 55, ts);
-  sprintf(ts, "CURRENT MANEUVER:%d", game.number);
-  PrintMono(5, 4, ts);
-  sprintf(ts, "TIME REMAINING:");
-  PrintMono(6, 6, ts);
-  sprintf(ts, "SYNC:");
-  PrintMono(7, 16, ts);
-  for (i = 0; i < 10; ++i) {
-    mono(0, 8, 7 + i) = game.redtm1[i];
-    mono(0, 8, 21 + i) = game.grntm1[i];
-    if ((game.field == 2) && ((curconfig.et1) && (curconfig.et2))) {
-      mono(0, 9, 7 + i) = game.redtm2[i];
-      mono(0, 9, 21 + i) = game.grntm2[i];
-    }
+  vPage(1);
+  vPosCur(0, 0);
+  vBox(0xffff, ' ', 80, 25);
+  vBorder(80, 3, 0);
+  vPosCur(4, 1);
+  v_sends("Gamma Systems Computer");
+  vPosCur(60, 1);
+  v_sends("ACTIVE - GAME MODE");
+  vPosCur(4, 3);
+  v_sends(LOCNAME);
+  vPosCur(4, 5);
+  v_printf("Current Maneuver:%d", game.number);
+  vPosCur(6, 6);
+  v_sends("Time Remaining:");
+  vPosCur(16, 7);
+  v_sends("Sync:");
+  vPosCur(7, 8);
+  v_sendsn(game.redtm1, 10);
+  vPosCur(21, 8);
+  v_sendsn(game.grntm1, 10);
+  if ((game.field == 2) && ((curconfig.et1) && (curconfig.et2))) {
+    vPosCur(7, 9);
+    v_sendsn(game.redtm2, 10);
+    vPosCur(21, 9);
+    v_sendsn(game.grntm2, 10);
+    vPosCur(18, 9);
+    v_sends("vs");
   }
-
-  sprintf(ts, "vs");
-  PrintMono(8, 18, ts);
-  if ((game.field == 2) && ((curconfig.et1) && (curconfig.et2)))
-    PrintMono(9, 18, ts);
-  sprintf(ts, "TEST SLOT1");
-  PrintMono(5, 29, ts);
-  sprintf(ts, "NO LOAD Pod");
-  PrintMono(6, 28, ts);
-  sprintf(ts, "Hit CTRL-E to END GAME");
-  PrintMono(5, 54, ts);
-  sprintf(ts, "s = Scores w/ codenames");
-  PrintMono(6, 54, ts);
-  sprintf(ts, "c = Scores w/passports");
-  PrintMono(7, 54, ts);
-  sprintf(ts, "p = Red Pod Performance");
-  PrintMono(8, 54, ts);
-  sprintf(ts, "P = Grn Pod Performance");
-  PrintMono(9, 54, ts);
-  sprintf(ts, "n = Clear View Window");
-  PrintMono(10, 54, ts);
-  for (i = 0; i < 80; ++i) mono(0, 11, i) = 'Í';
+  vPosCur(18, 8);
+  v_sends("vs");
+  vPosCur(29, 5);
+  v_sends("Test Slot 1");
+  vPosCur(28, 6);
+  v_sends("No Load Pod");
+  vPosCur(54, 5);
+  v_sends("Hit CTRL-E to END GAME");
+  vPosCur(54, 6);
+  v_sends("s = Scores w/ codenames");
+  vPosCur(54, 7);
+  v_sends("c = Scores w/ passports");
+  vPosCur(54, 8);
+  v_sends("p = Red Pod Performance");
+  vPosCur(54, 9);
+  v_sends("P = Grn Pod Performance");
+  vPosCur(54, 10);
+  v_sends("n = Clear View Window");
+  vPosCur(0, 11);
+  vRepeat('Í', 80);
+  vStatLine("", 0, 0, 1);
 }
 
 void SetupMonoIdle(byte again) {
   char ts[80];
   char tmp[10][36];
   int i, j, k, l;
+  /*truly dirty portion of code I'm leaving for now...*/
+  vPage(1);
   if (again == 1)
     for (j = 0; j < 10; ++j)
       for (i = 0; i < 36; ++i) tmp[j][i] = mono(0, j + 12, i + 1);
-  for (i = 0; i < 25; ++i)
-    for (j = 0; j < 80; ++j) {
-      mono(1, i, j) = NORMAL;
-      mono(0, i, j) = 32;
-    }
+  vPage(1);
+  vPosCur(0, 0);
+  vBox(0xffff, ' ', 80, 25);
+
+  /*the second half of the dirty code*/
   if (again == 1)
     for (j = 0; j < 10; ++j)
       for (i = 0; i < 36; ++i) mono(0, j + 12, i + 1) = tmp[j][i];
-  box1(0, 0, 79, 2);
-  sprintf(ts, "GAMMA SYSTEMS COMPUTER");
-  PrintMono(1, 4, ts);
-  sprintf(ts, "IDLE - GAME MODE");
-  PrintMono(1, 60, ts);
-  sprintf(ts, "%s", LOCNAME);
-  PrintMono(3, 4, ts);
-  sprintf(ts, "%s.%s.%s.%s.%s", STORENUM, SITENUM, OPTNUM, LICNUM, REVNUM);
-  PrintMono(3, 55, ts);
-  sprintf(ts, "NEXT MANEUVER:%d", game.number);
-  PrintMono(5, 4, ts);
-  sprintf(ts, "NEXT TRACK:");
-  PrintMono(6, 7, ts);
-  sprintf(ts, "SYNC:");
-  PrintMono(7, 13, ts);
-  box2(0, 11, 37, 22);
-  box2(50, 5, 79, 9);
-  box2(50, 12, 79, 16);
-  sprintf(ts, "SYSTEM INFO");
-  PrintMono(11, 1, ts);
-  sprintf(ts, "ET1 STATUS");
-  PrintMono(5, 51, ts);
-  sprintf(ts, "ET2 STATUS");
-  PrintMono(12, 51, ts);
-  sprintf(
-      ts,
-      "CTRL-Q TO EXIT GAME MODE, L TO PRINT LAST GAME, [#] TO SELECT CD TRACK");
-  PrintMono(24, 0, ts);
+
+  /*the dirty code is all over*/
+
+  vPosCur(0, 0);
+  vBorder(80, 3, 0);
+  vPosCur(4, 1);
+  v_sends("GAMMA SYSTEMS COMPUTER");
+  vPosCur(60, 1);
+  v_sends("IDLE - GAME MODE");
+  vPosCur(4, 3);
+  v_sends(LOCNAME);
+  vPosCur(4, 5);
+  v_printf("Next Maneuver:%d", game.number);
+  vPosCur(7, 6);
+  v_printf("Next Track:");
+  vPosCur(13, 7);
+  v_printf("Sync:");
+  vPosCur(0, 11);
+  vBorder(38, 12, 3);
+  vPosCur(50, 5);
+  vBorder(30, 5, 3);
+  vPosCur(50, 12);
+  vBorder(30, 5, 3);
+  vPosCur(1, 11);
+  v_sends("SYSTEM INFO");
+  vPosCur(51, 5);
+  v_sends("ET1 STATUS");
+  vPosCur(51, 12);
+  v_sends("ET2 STATUS");
+  vStatLine(
+      "CTRL-Q TO EXIT GAME MODE, L TO PRINT LAST GAME, [#] TO SELECT CD TRACK",
+      0, COLOR(WHT, BLK), 1);
 }
 
-void box2(int x, int y, int i, int j) {
-  int l, m;
-  char tr = '»';
-  char tl = 'É';
-  char br = '¼';
-  char bl = 'È';
-  char hr = 'Í';
-  char vr = 'º';
-  for (l = x; l <= i; ++l) {
-    mono(0, y, l) = hr;
-    mono(0, j, l) = hr;
-  }
-  for (l = y; l <= j; ++l) {
-    mono(0, l, x) = vr;
-    mono(0, l, i) = vr;
-  }
-  mono(0, y, x) = tl;
-  mono(0, j, i) = br;
-  mono(0, j, x) = bl;
-  mono(0, y, i) = tr;
-}
-
-/*Gads, your mom lets you write code like that?*/
-
+/*this stays the way it is right now...*/
+/*it works, it's small...not portalbe, but probably faster!*/
 void info(char *data) {
   int x, y;
   for (y = 12; y < 21; ++y)
@@ -393,11 +384,17 @@ void info(char *data) {
 void UpdateMonoIdle(byte rec1, byte rec2, byte track) {
   static byte orec1, orec2;
   char ts[40];
-  sprintf(ts, "%d", track);
-  PrintMono(6, 18, ts);
+  vPage(1);
+
+  vPosCur(18, 6);
+
+  v_printf("%d", track);
+
   sprintf(ts, "%2d-%02d-%02d      %2d:%02d:%02d", curdate.month, curdate.day,
           curdate.year, curtime.hour, curtime.minute, curtime.second);
-  PrintMono(3, 25, ts);
+  vPosCur(25, 3);
+  v_sends(ts);
+
   if (orec1 != rec1) {
     PrintEtStatus(8, 51, rec1);
     orec1 = rec1;
@@ -450,25 +447,27 @@ void PrintEtStatus(int x, int y, byte rec) {
       SSS = "???";
       break;
   }
-  for (i = 51; i <= 78; ++i) {
-    mono(0, x, i) = 32;
-  }
-  PrintMono(x, y, SSS);
+  vPosCur(51, x);
+  vBox(0xffff, ' ', 28, 1);
+  vPosCur(y, x);
+  v_sends(SSS);
 }
 
 void UpdateSync(int y, int x, byte sync) {
+  vPage(1);
+  vPosCur(x, y);
   switch (sync) {
     case GSYNC:
-      mono(0, y, x) = 'G';
+      vPutch('G');
       break;
     case PSYNC:
-      mono(0, y, x) = 'P';
+      vPutch('P');
       break;
     case ESYNC:
-      mono(0, y, x) = 'E';
+      vPutch('E');
       break;
     case NSYNC:
-      mono(0, y, x) = 'N';
+      vPutch('N');
       break;
   }
 }

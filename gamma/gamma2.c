@@ -1,7 +1,7 @@
 /*************
  gamma2.c
  *************/
-
+#define SYSTEM_PROGRAM
 #undef __TOPLEV
 #include <conio.h>
 #include <dos.h>
@@ -316,6 +316,29 @@ void LOBBY_tween() {
   sprintf(ts, "%2d:%02d", (int)curtime.hour, (int)curtime.minute);
   v_sends(ts);
   PrintMessage(++tnum);
+  vPage(0);
+  /*print the high scores in the high score zone*/
+  vChangeAttr(COLOR(HBRN, BLU));
+  vPosCur(2, 14);
+  v_sends("High score of the week:");
+  vPosCur(2, 17);
+  v_sends("Highest hits of the week:");
+  vChangeAttr(COLOR(HWHT, BLU));
+  vPosCur(7, 15);
+  if (weekly.highscore.passport[0]) {
+    v_sendsn(weekly.highscore.name, 10);
+    vPosCur(23, 15);
+    sprintf(ts, "%6d", weekly.highscore.score);
+    v_sends(ts);
+  } else
+    v_sends("None yet!  It could be YOU!");
+  vPosCur(7, 18);
+  if (weekly.highhits.passport[0]) {
+    v_sendsn(weekly.highscore.name, 10);
+    vPosCur(23, 18);
+    v_printf("%3d", weekly.highhits.hits);
+  } else
+    v_sends("None yet!  It could be YOU!");
   vPage(1);
 }
 
@@ -802,74 +825,66 @@ void EtStatus(byte Et1Stat, byte Et2Stat)
 void GetRedTeam(byte teams, byte who) {
   int m, o;
   if (teams == TRUE)
-    for (m = 0; m < 10; ++m)
-      if (curconfig.field == 1)
-        game.redtm1[m] = transfer[0][2 + m];
-      else if ((curconfig.field == 2) && (who == ALPHA))
-        game.redtm1[m] = transfer[0][2 + m];
-      else if ((curconfig.field == 2) && (who == OMEGA))
-        game.redtm2[m] = transfer[0][2 + m];
+    if (curconfig.field == 1)
+      memcpy(game.redtm1, &transfer[0][2], 10);
+    else if ((curconfig.field == 2) && (who == ALPHA))
+      memcpy(game.redtm1, &transfer[0][2], 10);
+    else if ((curconfig.field == 2) && (who == OMEGA))
+      memcpy(game.redtm2, &transfer[0][2], 10);
+
   if (who == BOTH)
-    for (m = 0; m < 20; ++m)
-      for (o = 0; o < 10; ++o) {
-        player[m + 1].passport[o] = transfer[0][(20 * m) + o + 22];
-        player[m + 1].name[o] = transfer[0][(20 * m) + 10 + o + 22];
-        CheckPassport((char *)player[m + 1].passport);
-      }
+    for (m = 0; m < 20; ++m) {
+      memcpy(player[m + 1].passport, &transfer[0][(20 * m + 22)], 10);
+      memcpy(player[m + 1].name, &transfer[0][(20 * m) + 10 + 22], 10);
+      CheckPassport((char *)player[m + 1].passport);
+    }
   if (who == ALPHA)
-    for (m = 0; m < 10; ++m)
-      for (o = 0; o < 10; ++o) {
-        player[(m * 2) + 1].passport[o] = transfer[0][(20 * m) + o + 22];
-        player[(m * 2) + 1].name[o] = transfer[0][(20 * m) + 10 + o + 22];
-        CheckPassport((char *)player[(m * 2) + 1].passport);
-      }
+    for (m = 0; m < 10; ++m) {
+      memcpy(player[(m * 2) + 1].passport, &transfer[0][(20 * m) + 0 + 22], 10);
+      memcpy(player[(m * 2) + 1].name, &transfer[0][(20 * m) + 10 + 22], 10);
+      CheckPassport((char *)player[(m * 2) + 1].passport);
+    }
   if (who == OMEGA)
-    for (m = 0; m < 10; ++m)
-      for (o = 0; o < 10; ++o) {
-        player[(m * 2) + 2].passport[o] = transfer[0][(20 * m) + o + 22];
-        player[(m * 2) + 2].name[o] = transfer[0][(20 * m) + 10 + o + 22];
-        CheckPassport((char *)player[(m * 2) + 2].passport);
-      }
+    for (m = 0; m < 10; ++m) {
+      memcpy(player[(m * 2) + 2].passport, &transfer[0][(20 * m) + 0 + 22], 10);
+      memcpy(player[(m * 2) + 2].name, &transfer[0][(20 * m) + 10 + 22], 10);
+      CheckPassport((char *)player[(m * 2) + 2].passport);
+    }
 }
 
 void GetGrnTeam(byte teams, byte who) {
   int m, o;
   if (teams == TRUE)
-    for (m = 0; m < 10; ++m)
-      if (curconfig.field == 1)
-        game.grntm1[m] = transfer[1][12 + m];
-      else if ((curconfig.field == 2) & (who == ALPHA))
-        game.grntm1[m] = transfer[1][12 + m];
-      else if ((curconfig.field == 2) & (who == OMEGA))
-        game.grntm2[m] = transfer[1][12 + m];
+    if (curconfig.field == 1)
+      memcpy(game.grntm1, &transfer[1][12], 10);
+    else if ((curconfig.field == 2) & (who == ALPHA))
+      memcpy(game.grntm1, &transfer[1][12], 10);
+    else if ((curconfig.field == 2) & (who == OMEGA))
+      memcpy(game.grntm2, &transfer[1][12], 10);
   if (who == BOTH)
-    for (m = 0; m < 20; ++m)
-      for (o = 0; o < 10; ++o) {
-        player[m + 21].passport[o] = transfer[1][(20 * m) + o + 22];
-        player[m + 21].name[o] = transfer[1][(20 * m) + 10 + o + 22];
-        CheckPassport((char *)player[m + 21].passport);
-      }
+    for (m = 0; m < 20; ++m) {
+      memcpy(player[m + 21].passport, &transfer[1][(20 * m + 22)], 10);
+      memcpy(player[m + 21].name, &transfer[1][(20 * m) + 10 + 22], 10);
+      CheckPassport((char *)player[m + 21].passport);
+    }
   if (who == GREEN)
-    for (m = 0; m < 20; ++m)
-      for (o = 0; o < 10; ++o) {
-        player[m + 21].passport[o] = transfer[0][(20 * m) + o + 22];
-        player[m + 21].name[o] = transfer[0][(20 * m) + 10 + o + 22];
-        CheckPassport((char *)player[m + 21].passport);
-      }
+    for (m = 0; m < 20; ++m) {
+      memcpy(player[m + 21].passport, &transfer[0][(20 * m) + 22], 10);
+      memcpy(player[m + 21].name, &transfer[0][(20 * m) + 10 + 22], 10);
+      CheckPassport((char *)player[m + 21].passport);
+    }
   if (who == ALPHA)
-    for (m = 0; m < 10; ++m)
-      for (o = 0; o < 10; ++o) {
-        player[(m * 2) + 21].passport[o] = transfer[1][(20 * m) + o + 22];
-        player[(m * 2) + 21].name[o] = transfer[1][(20 * m) + 10 + o + 22];
-        CheckPassport((char *)player[(m * 2) + 21].passport);
-      }
+    for (m = 0; m < 10; ++m) {
+      memcpy(player[(m * 2) + 21].passport, &transfer[1][(20 * m) + 22], 10);
+      memcpy(player[(m * 2) + 21].name, &transfer[1][(20 * m) + 10 + 22], 10);
+      CheckPassport((char *)player[(m * 2) + 21].passport);
+    }
   if (who == OMEGA)
-    for (m = 0; m < 10; ++m)
-      for (o = 0; o < 10; ++o) {
-        player[(m * 2) + 22].passport[o] = transfer[1][(20 * m) + o + 22];
-        player[(m * 2) + 22].name[o] = transfer[1][(20 * m) + 10 + o + 22];
-        CheckPassport((char *)player[(m * 2) + 22].passport);
-      }
+    for (m = 0; m < 10; ++m) {
+      memcpy(player[(m * 2) + 22].passport, &transfer[1][(20 * m) + 22], 10);
+      memcpy(player[(m * 2) + 22].name, &transfer[1][(20 * m) + 10 + 22], 10);
+      CheckPassport((char *)player[(m * 2) + 22].passport);
+    }
 }
 
 void SelectTrack(byte track) {

@@ -67,3 +67,5 @@ DCL byte poll_on;
 DCL byte ItsFake;
 DCL int PollNum;
 DCL byte noxfer;
+DCL struct gamma_current weekly;
+DCL byte update_weekly;

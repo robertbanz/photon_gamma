@@ -25,6 +25,10 @@ void validate(char *, unsigned int);
 byte WaitAck(int, int);
 void ControlBootScreen();
 void MainLoop();
+void MonoCursorOff(void);
+void UpdateWeeklyInfo(char *filename);
+void LoadWeeklyInfo(char *filename);
+
 /***********************************
  * DEFINED IN GAMMA2.C              *
  ***********************************/

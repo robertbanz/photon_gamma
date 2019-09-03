@@ -1,6 +1,7 @@
 /***********
  glib.c
  ***********/
+#define SYSTEM_PROGRAM
 
 #include "glib.h"
 #include <conio.h>
@@ -19,29 +20,5 @@ void charout(unsigned int port, byte data) {
 }
 
 void PrintMono(int y, int x, char *ts) {
-  while (*(ts) != '\0') {
-    mono(0, y, x++) = *(ts++);
-  }
-}
-
-void box1(int x, int y, int i, int j) {
-  int l, m;
-  char tr = '¿';
-  char tl = 'Ú';
-  char br = 'Ù';
-  char bl = 'À';
-  char hr = 'Ä';
-  char vr = '³';
-  for (l = x; l <= i; ++l) {
-    mono(0, y, l) = hr;
-    mono(0, j, l) = hr;
-  }
-  for (l = y; l <= j; ++l) {
-    mono(0, l, x) = vr;
-    mono(0, l, i) = vr;
-  }
-  mono(0, y, x) = tl;
-  mono(0, j, i) = br;
-  mono(0, j, x) = bl;
-  mono(0, y, i) = tr;
+  while (*ts) mono(0, y, x++) = *(ts++);
 }

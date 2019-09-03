@@ -1,6 +1,7 @@
 /**********
  setup.c
  **********/
+#define SYSTEM_PROGRAM
 
 #include <conio.h>
 #include <dos.h>
@@ -51,18 +52,15 @@ void sys_config(byte configured) {
   curconfig.pub_hcp = newconfig.pub_hcp;
   curconfig.lea_hcp = newconfig.lea_hcp;
   curconfig.ffa_hcp = newconfig.ffa_hcp;
-  for (k = 0; k < 10; ++k) {
-    curconfig.log_path[k] = newconfig.log_path[k];
-    curconfig.pod_path[k] = newconfig.pod_path[k];
-    curconfig.data_path[k] = newconfig.data_path[k];
-    curconfig.mess_path[k] = newconfig.mess_path[k];
-    curconfig.alpha_red[k] = newconfig.alpha_red[k];
-    curconfig.alpha_grn[k] = newconfig.alpha_grn[k];
-    curconfig.omega_red[k] = newconfig.omega_red[k];
-    curconfig.omega_grn[k] = newconfig.omega_grn[k];
-    curconfig.beta_red[k] = newconfig.beta_red[k];
-    curconfig.beta_grn[k] = newconfig.beta_grn[k];
-  }
+  memcpy(curconfig.log_path, newconfig.log_path, 10);
+  memcpy(curconfig.pod_path, newconfig.pod_path, 10);
+  memcpy(curconfig.data_path, newconfig.data_path, 10);
+  memcpy(curconfig.alpha_red, newconfig.alpha_red, 10);
+  memcpy(curconfig.alpha_grn, newconfig.alpha_grn, 10);
+  memcpy(curconfig.omega_grn, newconfig.omega_grn, 10);
+  memcpy(curconfig.beta_red, newconfig.beta_red, 10);
+  memcpy(curconfig.beta_grn, newconfig.beta_grn, 10);
+
   for (k = 0; k < 10; ++k) {
     if (curconfig.log_path[k] == 32) curconfig.log_path[k] = 0;
     if (curconfig.pod_path[k] == 32) curconfig.pod_path[k] = 0;
@@ -70,6 +68,8 @@ void sys_config(byte configured) {
     if (curconfig.data_path[k] == 32) curconfig.data_path[k] = 0;
   }
 }
+
+/*compile these next two functions into one.*/
 
 #pragma optimize("", off)
 

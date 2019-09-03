@@ -59,7 +59,7 @@
 #define RADIO 0x240
 #define ET1 0x248
 #define ET2 0x250
-#define DC 0x258
+#define DC /*0x258*/ 0x3f8
 #define EC 0x260
 #define PC 0x268
 #define PS 0x270
@@ -191,6 +191,12 @@ struct playertype {
                                hell they're gonna get it!*/
 };
 
+struct gamma_current {
+  int game_number;
+  struct playertype highscore;
+  struct playertype highhits;
+};
+
 struct pc_playerinfo {
   char name[10];
   int hitopp[40];
@@ -310,6 +316,9 @@ struct date {
 };
 #pragma pack()
 
-#include "phoproto.h"
+#ifdef SYSTEM_PROGRAM
 #include "photon.h"
+#endif
+
+#include "phoproto.h"
 

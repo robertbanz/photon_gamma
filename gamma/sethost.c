@@ -29,9 +29,8 @@ void setuphostess() {
   outp(ET2 + 1, 1);
   outp(ET2 + 4, 3);
 
-  /*4800 BAUD*/
   outp(DC + 3, SETBAUD);
-  outp(DC, LSB9600); /*0x30*/
+  outp(DC, LSB9600);
   outp(DC + 1, MSB9600);
   outp(DC + 3, SEND8n1);
   outp(DC + 1, 1);
@@ -54,4 +53,3 @@ void setuphostess() {
   outp(EC + 3, SEND8n1);
   outp(EC + 1, INTRECSEND);
 }
-

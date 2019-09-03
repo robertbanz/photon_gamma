@@ -1,6 +1,7 @@
 /*************
  newconfi.c
  *************/
+#define SYSTEM_PROGRAM
 
 #include <dos.h>
 #include <stdio.h>
